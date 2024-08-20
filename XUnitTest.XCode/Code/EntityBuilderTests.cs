@@ -17,7 +17,7 @@ public class EntityBuilderTests
     public EntityBuilderTests()
     {
         _option = new BuilderOption();
-        var tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        var tables = ClassBuilder.LoadModels(@"..\..\DH.NCode\Membership\Member.xml", _option, out _);
         _table = tables.FirstOrDefault(e => e.Name == "User");
         _tableLog = tables.FirstOrDefault(e => e.Name == "Log");
     }

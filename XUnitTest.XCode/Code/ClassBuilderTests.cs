@@ -17,7 +17,7 @@ public class ClassBuilderTests
     public ClassBuilderTests()
     {
         _option = new BuilderOption();
-        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _tables = ClassBuilder.LoadModels(@"..\..\DH.NCode\Membership\Member.xml", _option, out _);
         _table = _tables.FirstOrDefault(e => e.Name == "User");
     }
 
