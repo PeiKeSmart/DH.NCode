@@ -18,7 +18,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class HighGoTests
 {
     private static String _ConnStr = "Server=127.0.0.1;User Id=highgo;Password=P12345!@;Database=highgo;Port=5866";
