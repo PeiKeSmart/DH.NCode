@@ -14,6 +14,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
   <PropertyGroup>
+    <!--<IsPackable>true</IsPackable>-->
     <PackageId>$(AssemblyName)</PackageId>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://www.haocoding.com/</PackageProjectUrl>
@@ -24,7 +25,12 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!--<EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
     <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\Doc\DH.png" Link="DH.png" PackagePath="\" />
