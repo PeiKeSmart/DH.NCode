@@ -75,7 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DH.NIP" Version="3.7.2024.826-beta0239" />
-    <PackageReference Include="DH.UnitTest" Version="1.0.2024.821-beta1139" />
+    <PackageReference Include="DH.UnitTest" Version="1.0.2024.826-beta0637" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
     <PackageReference Include="xunit" Version="2.9.0" />
@@ -85,6 +85,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DH.NCode.DaMeng\DH.NCode.DaMeng.csproj" />
+    <ProjectReference Include="..\DH.NCode.DB2\DH.NCode.DB2.csproj" />
+    <ProjectReference Include="..\DH.NCode.HighGo\DH.NCode.HighGo.csproj" />
+    <ProjectReference Include="..\DH.NCode.KingBase\DH.NCode.KingBase.csproj" />
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
   </ItemGroup>
   <ItemGroup>
