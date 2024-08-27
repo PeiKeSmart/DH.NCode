@@ -30,12 +30,6 @@ jobs:
       run: |
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode/DH.NCode.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.MySql/DH.NCode.MySql.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.SQLite/DH.NCode.SQLite.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.SqlServer/DH.NCode.SqlServer.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.Oracle/DH.NCode.Oracle.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.PostgreSQL/DH.NCode.PostgreSQL.csproj
-        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.DaMeng/DH.NCode.DaMeng.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/PeiKeSmart/index.json --api-key ${{ github.token }}
