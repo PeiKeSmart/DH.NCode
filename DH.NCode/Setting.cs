@@ -4,7 +4,6 @@ using NewLife.Configuration;
 using XCode.DataAccessLayer;
 
 [assembly: InternalsVisibleTo("XUnitTest.XCode")]
-
 namespace XCode;
 
 /// <summary>XCode设置</summary>
