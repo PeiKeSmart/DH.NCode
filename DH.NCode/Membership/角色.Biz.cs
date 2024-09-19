@@ -320,7 +320,7 @@ public partial class Role : LogEntity<Role>, IRole
         foreach (var item in dic)
         {
             var resid = item.Key.ToInt();
-            Permissions[resid] = (PermissionFlags)item.Value.ToInt();
+            Permissions[resid] = (PermissionFlags)(Int32.Parse(item.Value));
         }
     }
 
