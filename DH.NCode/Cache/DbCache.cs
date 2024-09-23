@@ -183,6 +183,28 @@ public class DbCache : NewLife.Caching.Cache
         //return list.Delete();
     }
 
+    /// <summary>
+    /// 移除缓存项
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public override Int32 Remove(String key)
+    {
+        var count = 0;
+
+        var e = _cache.Get<Object>(key);
+        if (e != null)
+        {
+            _cache.Remove(key);
+
+            (e as IEntity)!.Delete();
+
+            count++;
+        }
+
+        return count;
+    }
+
     /// <summary>删除所有配置项</summary>
     public override void Clear() => Factory.Session.Truncate();
 
