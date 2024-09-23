@@ -14,7 +14,7 @@ using XUnitTest.XCode.TestEntity;
 namespace XUnitTest.XCode.EntityTests;
 
 [Collection("Database")]
-[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class ShardTests
 {
     public ShardTests()

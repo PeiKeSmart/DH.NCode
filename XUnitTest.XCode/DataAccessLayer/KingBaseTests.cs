@@ -19,7 +19,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class KingBaseTests
 {
     private static String _ConnStr = "Server=127.0.0.1;User ID=system;Password=123456!@;Database=test;Port=54321";

@@ -15,7 +15,7 @@ using XUnitTest.XCode.TestEntity;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 [Collection("Database")]
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class HanaTests
 {
     private static String _ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";
