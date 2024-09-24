@@ -23,10 +23,9 @@ public enum Migration
 /// <summary>名称格式化</summary>
 public enum NameFormats
 {
-    /// <summary>默认</summary>
+    /// <summary>原样</summary>
     Default = 0,
-    /// <summary>保持原样</summary>
-    None,
+
     /// <summary>全大写</summary>
     Upper,
 
