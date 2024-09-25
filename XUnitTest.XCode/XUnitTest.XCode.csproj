@@ -74,8 +74,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NIP" Version="3.9.2024.9210003" />
-    <PackageReference Include="DH.UnitTest" Version="1.0.2024.923-beta0148" />
+    <PackageReference Include="DH.NIP" Version="3.91.2024.923-beta0303" />
+    <PackageReference Include="DH.UnitTest" Version="1.0.2024.923-beta0152" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
     <PackageReference Include="xunit" Version="2.9.1" />
