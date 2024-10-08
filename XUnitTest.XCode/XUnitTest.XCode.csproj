@@ -74,7 +74,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NIP" Version="3.91.2024.923-beta0303" />
+    <PackageReference Include="DH.NIP" Version="3.91.2024.1008-beta0406" />
     <PackageReference Include="DH.UnitTest" Version="1.0.2024.1008-beta0147" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
