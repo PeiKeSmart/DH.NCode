@@ -28,7 +28,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增数据规模概念，增强对大数据表的支持</PackageReleaseNotes>
+    <PackageReleaseNotes>完善对PostgreSql的支持，包括添删改查、批操作和正反向工程</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -107,6 +107,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="3.91.2024.925-beta0627" />
+    <PackageReference Include="DH.NCore" Version="3.91.2024.1008-beta0138" />
   </ItemGroup>
 </Project>
