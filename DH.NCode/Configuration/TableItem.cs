@@ -476,11 +476,6 @@ public class TableItem
             if (item.Name.EqualIgnoreCase(name)) return _all[name] = item as Field;
         }
 
-        foreach (var item in AllFields)
-        {
-            if (item.FormatedName.EqualIgnoreCase(name)) return _all[name] = item as Field;
-        }
-
         return _all[name] = null;
     }
 

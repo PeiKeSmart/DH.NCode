@@ -153,6 +153,27 @@ public class DbCache : NewLife.Caching.Cache
         return value.ToJsonEntity<T>();
     }
 
+    /// <summary>移除缓存项</summary>
+    /// <param name="key">键</param>
+    /// <returns>实际移除个数</returns>
+    public override Int32 Remove(String key)
+    {
+        if (Count == 0) return 0;
+
+        var count = 0;
+        var e = _cache.Get<Object>(key);
+        if (e != null)
+        {
+            _cache.Remove(key);
+
+            (e as IEntity)!.Delete();
+
+            count++;
+        }
+
+        return count;
+    }
+
     /// <summary>批量移除缓存项</summary>
     /// <param name="keys">键集合</param>
     /// <returns>实际移除个数</returns>
@@ -181,28 +202,6 @@ public class DbCache : NewLife.Caching.Cache
         //    _cache.Remove(item.Name);
         //}
         //return list.Delete();
-    }
-
-    /// <summary>
-    /// 移除缓存项
-    /// </summary>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    public override Int32 Remove(String key)
-    {
-        var count = 0;
-
-        var e = _cache.Get<Object>(key);
-        if (e != null)
-        {
-            _cache.Remove(key);
-
-            (e as IEntity)!.Delete();
-
-            count++;
-        }
-
-        return count;
     }
 
     /// <summary>删除所有配置项</summary>
