@@ -64,6 +64,7 @@ internal class PostgreSQL : RemoteDb
 
     #region 数据库特性
 
+    private static Boolean IsArrayField(Type? type) => type?.IsArray == true && type != typeof(Byte[]);
     protected override String ReservedWordsStr
     {
         get
@@ -99,35 +100,29 @@ internal class PostgreSQL : RemoteDb
         {
             type = column.DataType;
             isNullable = column.Nullable;
-            isArrayField = type.IsArray;
         }
         else if (value != null)
         {
             type = value.GetType();
-            isArrayField = type.IsArray;
         }
-
+        string fieldType = string.Empty;
         // 如果类型是Nullable的，则获取对应的类型
         type = Nullable.GetUnderlyingType(type) ?? type;
         //如果是数组，就取数组的元素类型
-        if (type?.IsArray == true)
+        if (IsArrayField(type))
         {
-            //Byte[] 数组可能是 Blob，不应该当作数组字段处理
-            if (/*column?.IsArray == true ||*/ type != typeof(Byte[]))
-            {
-                isArrayField = true;
-                type = type.GetElementType();
-            }
+            isArrayField = true;
+            type = type!.GetElementType();
         }
         if (isArrayField)
         {
             if (value is null) return isNullable ? "NULL" : "'{}'";
             var count = 0;
-            var builder = new StringBuilder();
+            var builder = Pool.StringBuilder.Get();
             builder.Append("ARRAY[");
             foreach (var v in (IEnumerable)value)
             {
-                builder.Append(ValueToSQL(type, isNullable, v));
+                builder.Append(ValueToSQL(type, isNullable, v, ref fieldType));
                 builder.Append(',');
                 count++;
             }
@@ -135,24 +130,32 @@ internal class PostgreSQL : RemoteDb
             {
                 builder.Length--;
                 builder.Append("]");
+                //在进行数组运算时，因字符串可能会被映射为多种类型造成方法签名不匹配，所以需要指定类型
+                //这里仅处理了字符串，如果其他类型也出现了类似情况，仅需在 ValueToSQL 中添加对应的类型即可
+                if (!string.IsNullOrWhiteSpace(fieldType))
+                {
+                    builder.Append("::").Append(fieldType).Append("[]");
+                }
             }
             else
             {
                 builder.Clear();
                 builder.Append("'{}'");
             }
-            return builder.ToString();
+            return builder.Return();
         }
         else
         {
-            return ValueToSQL(type, isNullable, value);
+            return ValueToSQL(type, isNullable, value, ref fieldType);
         }
     }
 
-    private string ValueToSQL(Type? type, bool isNullable, object? value)
+
+    private string ValueToSQL(Type? type, bool isNullable, object? value, ref string fieldType)
     {
         if (type == typeof(String))
         {
+            if (string.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }
@@ -202,26 +205,26 @@ internal class PostgreSQL : RemoteDb
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => "postgres";
 
+    /// <inheritdoc/>
+    public override NameFormats DefaultNameFormat => NameFormats.Underline;
+
     /// <summary>字符串相加</summary>
     /// <param name="left"></param>
     /// <param name="right"></param>
     /// <returns></returns>
     public override String StringConcat(String left, String right) => (!String.IsNullOrEmpty(left) ? left : "''") + "||" + (!String.IsNullOrEmpty(right) ? right : "''");
 
-    /// <summary>
-    /// 格式化数据库名称，表名称，字段名称 增加双引号（""）
-    /// PGSQL 默认情况下创建库表时自动转为小写，增加引号强制区分大小写
-    /// 以解决数据库创建查询时大小写问题
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public override String FormatName(String name)
     {
         name = base.FormatName(name);
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;
 
-        return $"\"{name}\"";
+        //如果包含大写字符，就加上引号
+        if (name.Any(char.IsUpper)) return $"\"{name}\"";
+
+        return name;
     }
 
     /// <inheritdoc/>
@@ -503,8 +506,6 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         var postfix = ArrayTypePostfix!;
         if (field.RawType?.EndsWith(postfix) == true)
         {
-            //field.IsArray = true;
-
             var clone = field.Clone(field.Table);
             clone.RawType = field.RawType.Substring(0, field.RawType.Length - postfix.Length);
 
@@ -592,6 +593,18 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         }
 
         return str;
+    }
+
+    /// <summary>默认值</summary>
+    /// <param name="field"></param>
+    /// <param name="onlyDefine"></param>
+    /// <returns></returns>
+    protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
+    {
+        if (field.DataType == typeof(Boolean))
+            return $" DEFAULT {(field.DefaultValue.ToBoolean())}";
+
+        return base.GetDefault(field, onlyDefine);
     }
 
     #region 架构定义
