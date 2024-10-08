@@ -277,23 +277,6 @@ public class DbCache : NewLife.Caching.Cache
         list.Delete();
     }
     #endregion
-
-    #region 性能测试
-    /// <summary>使用指定线程测试指定次数</summary>
-    /// <param name="times">次数</param>
-    /// <param name="threads">线程</param>
-    /// <param name="rand">随机读写</param>
-    /// <param name="batch">批量操作</param>
-    public override Int64 BenchOne(Int64 times, Int32 threads, Boolean rand, Int32 batch)
-    {
-        if (rand)
-            times *= 1;
-        else
-            times *= 1000;
-
-        return base.BenchOne(times, threads, rand, batch);
-    }
-    #endregion
 }
 
 /// <summary>数据缓存接口</summary>

@@ -15,7 +15,7 @@ using static XCode.Membership.Area;
 namespace XUnitTest.XCode.Membership;
 
 [Collection("Database")]
-[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.PriorityOrderer", "DH.UnitTest")]
 public class AreaTests
 {
     static AreaTests()

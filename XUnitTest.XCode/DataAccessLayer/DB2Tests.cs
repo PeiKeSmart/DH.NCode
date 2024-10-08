@@ -11,7 +11,7 @@ using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class DB2Tests
 {
     private static String _ConnStr = "Database=localhost;Uid=myUsername;Pwd=myPassword;";

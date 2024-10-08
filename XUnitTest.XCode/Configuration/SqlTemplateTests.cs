@@ -16,7 +16,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.Configuration;
 
-[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.PriorityOrderer", "DH.UnitTest")]
 public class SqlTemplateTests
 {
     private static String _mysql_ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";

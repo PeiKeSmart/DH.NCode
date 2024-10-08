@@ -8,7 +8,7 @@ using Xunit;
 
 namespace XUnitTest.XCode.Caching;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class SingleEntityCacheTests
 {
     static SingleEntityCacheTests() => CacheBase.Debug = true;

@@ -18,7 +18,7 @@ using XUnitTest.XCode.TestEntity;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 [Collection("Database")]
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class SQLiteTests
 {
     [Fact]
