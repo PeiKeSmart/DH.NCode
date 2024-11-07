@@ -34,9 +34,9 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="3.91.2024.1101-beta0242" />
-    <PackageReference Include="DH.NRemoting" Version="3.91.2024.1101-beta0219" />
-    <PackageReference Include="DH.NStardust" Version="3.91.2024.1101-beta0256" />
+    <PackageReference Include="DH.NRedis" Version="3.91.2024.1104-beta0356" />
+    <PackageReference Include="DH.NRemoting" Version="3.91.2024.1104-beta0322" />
+    <PackageReference Include="DH.NStardust" Version="3.91.2024.1104-beta0348" />
     <PackageReference Include="MySql.Data" Version="9.1.0" />
     <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.300" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.0" />
