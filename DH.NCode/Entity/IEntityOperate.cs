@@ -4,6 +4,7 @@ using System.Data;
 using NewLife.Data;
 using XCode.Configuration;
 using XCode.Shards;
+using XCode.Statistics;
 
 namespace XCode;
 
