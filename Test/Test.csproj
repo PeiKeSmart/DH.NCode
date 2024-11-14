@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <VersionPrefix>1.0</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
@@ -35,7 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DH.NRedis" Version="3.91.2024.1109-beta0248" />
-    <PackageReference Include="DH.NRemoting" Version="3.91.2024.1109-beta0233" />
+    <PackageReference Include="DH.NRemoting" Version="4.0.2024.1113-beta0622" />
     <PackageReference Include="DH.NStardust" Version="3.91.2024.1109-beta1500" />
     <PackageReference Include="MySql.Data" Version="9.1.0" />
     <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.300" />
