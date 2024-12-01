@@ -18,6 +18,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <WarningsAsErrors>CA2007</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <!--<IsPackable>true</IsPackable>-->
@@ -107,6 +109,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="4.0.2024.1129-beta0124" />
+    <PackageReference Include="DH.NCore" Version="4.0.2024.1201-beta0217" />
   </ItemGroup>
 </Project>
