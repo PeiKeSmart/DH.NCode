@@ -99,7 +99,6 @@
     <ProjectReference Include="..\DH.NCode.HighGo\DH.NCode.HighGo.csproj" />
     <ProjectReference Include="..\DH.NCode.KingBase\DH.NCode.KingBase.csproj" />
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
-    <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
