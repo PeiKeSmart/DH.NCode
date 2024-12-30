@@ -44,6 +44,14 @@
     <None Include="Code\Models\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Remove="Code\Controllers\**" />
+    <None Include="Code\Controllers\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="DataAccessLayer\Sqls\**" />
+    <None Include="DataAccessLayer\Sqls\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Code\BuildTT\UserTT.cs">
@@ -91,6 +99,7 @@
     <ProjectReference Include="..\DH.NCode.HighGo\DH.NCode.HighGo.csproj" />
     <ProjectReference Include="..\DH.NCode.KingBase\DH.NCode.KingBase.csproj" />
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
+    <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
