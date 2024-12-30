@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -130,6 +130,7 @@ public partial class Parameter : Entity<Parameter>
     /// <param name="userId">用户。按用户区分参数，用户0表示系统级</param>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
+    /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
