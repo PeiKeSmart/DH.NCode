@@ -4,6 +4,7 @@
     <OutputPath>..\Bin\UnitTest</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Code\BuildTT\UserTT.cs" />
