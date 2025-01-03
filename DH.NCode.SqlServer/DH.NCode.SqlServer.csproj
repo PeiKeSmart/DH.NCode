@@ -4,7 +4,7 @@
     <AssemblyTitle>数据中间件SqlServer包</AssemblyTitle>
     <Description>引入SqlServer数据库驱动包</Description>
     <Company>湖北登灏科技有限公司</Company>
-    <Copyright>©2020-2024 湖北登灏科技有限公司</Copyright>
+    <Copyright>©2020-2025 湖北登灏科技有限公司</Copyright>
     <VersionPrefix>4.00</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
