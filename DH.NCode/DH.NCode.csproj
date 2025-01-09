@@ -47,6 +47,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Using Include="NewLife"/>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Remove="build\**" />
     <Compile Remove="Interfaces\**" />
     <Compile Remove="Membership\Config\**" />
