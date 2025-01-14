@@ -83,12 +83,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NIP" Version="4.0.2025.103" />
-    <PackageReference Include="DH.UnitTest" Version="4.0.2025.109-beta2259" />
+    <PackageReference Include="DH.NIP" Version="4.0.2025.109-beta2337" />
+    <PackageReference Include="DH.UnitTest" Version="4.0.2025.109-beta2334" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -105,7 +105,7 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
   <ItemGroup>
-    <Using Include="NewLife"/>
+    <Using Include="NewLife" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Code\class_user_extend2.cs">
