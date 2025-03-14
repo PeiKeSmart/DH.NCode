@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -18,7 +18,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class SqlServerTests
 {
     private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=sa;Pwd=sa;Connection Timeout=2";

@@ -10,7 +10,7 @@ using Xunit;
 namespace XUnitTest.XCode.Caching
 {
     [Collection("Database")]
-    [TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
+    [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
     public class EntityCacheTests
     {
         static EntityCacheTests()

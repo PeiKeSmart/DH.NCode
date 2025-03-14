@@ -15,7 +15,7 @@ using static XCode.Membership.Area;
 namespace XUnitTest.XCode.Membership;
 
 [Collection("Database")]
-[TestCaseOrderer("DH.UnitTest.PriorityOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class AreaTests
 {
     static AreaTests()
@@ -258,7 +258,6 @@ public class AreaTests
                 await http.DownloadFileAsync(url, file);
             }
 
-            //Area.Meta.Session.Truncate();
             Area.Meta.Session.Truncate();
             var rs = Area.Import(file, true, 3, false);
             Assert.Equal(3639, rs);
