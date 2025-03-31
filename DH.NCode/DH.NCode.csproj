@@ -112,6 +112,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="4.11.2025.314-beta1015" />
+    <PackageReference Include="DH.NCore" Version="4.11.2025.331-beta0808" />
   </ItemGroup>
 </Project>
