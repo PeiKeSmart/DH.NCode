@@ -11,7 +11,7 @@ using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class OracleTests
 {
     private String _ConnStr = "Data Source=Tcp://127.0.0.1/ORCL;User Id=scott;Password=tiger";
