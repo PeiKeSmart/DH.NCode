@@ -18,7 +18,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
 public class SqlServerTests
 {
     private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=sa;Pwd=sa;Connection Timeout=2";
