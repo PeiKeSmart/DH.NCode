@@ -42,7 +42,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.7.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
