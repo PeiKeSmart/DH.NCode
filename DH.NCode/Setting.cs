@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using NewLife.Configuration;
 using XCode.DataAccessLayer;
 
-[assembly: InternalsVisibleTo("XUnitTest.XCode")]
+[assembly: InternalsVisibleTo("XUnitTest.XCode, PublicKey=00240000048000001401000006020000002400005253413100080000010001000d41eb3bdab5c2150958b46c95632b7e4dcb0af77ed8637bd8543875bc2443d01273143bb46655a48a92efa76251adc63ccca6d0e9cef2e0ce93e32b5043bea179a6c710981be4a71703a03e10960643f7df091f499cf60183ef0e4e4e2eebf26e25cea0eebf87c8a6d7f8130c283fc3f747cb90623f0aaa619825e3fcd82f267a0f4bfd26c9f2a6b5a62a6b180b4f6d1d091fce6bd60a9aa9aa5b815b833b44e0f2e58b28a354cb20f52f31bb3b3a7c54f515426537e41f9c20c07e51f9cab8abc311daac19a41bd473a51c7386f014edf1863901a5c29addc89da2f2659c9c1e95affd6997396b9680e317c493e974a813186da277ff9c1d1b30e33cb5a2f6")]
 
 namespace XCode;
 
@@ -72,6 +72,22 @@ public class XCodeSetting : Config<XCodeSetting>
     /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除</summary>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;
+
+    /// <summary>检查注释。表注释或字段注释，反向工程，默认打开</summary>  
+    [Description("检查注释。表注释或字段注释，反向工程，默认打开")]
+    public Boolean CheckComment { get; set; } = true;
+
+    /// <summary>检查删除索引。反向工程，默认打开</summary>  
+    [Description("检查删除索引。反向工程，默认打开")]
+    public Boolean CheckDeleteIndex { get; set; } = true;
+
+    /// <summary>检查添加索引。反向工程，默认打开</summary>  
+    [Description("检查添加索引。反向工程，默认打开")]
+    public Boolean CheckAddIndex { get; set; } = true;
+
+    /// <summary>是否检查索引重复。默认打开</summary>  
+    [Description("检查索引重复。默认打开")]
+    public Boolean CheckDuplicateIndex { get; set; } = true;
 
     /// <summary></summary>
     [Description("表名称、字段名大小写格式。Default 默认(由数据库决定);None 与模型保持一致;Upper 全大写;Lower 全小写;Underline下划线")]
