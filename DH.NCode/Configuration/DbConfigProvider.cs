@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Diagnostics;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Data;
@@ -214,13 +215,27 @@ public class DbConfigProvider : ConfigProvider
             File.WriteAllText(file.EnsureDirectory(true), txt);
         }
     }    
-    
-    /// <summary>保存配置树到数据源</summary>
+      /// <summary>保存配置树到数据源</summary>
     public override Boolean SaveAll()
     {
         lock (_instanceLock)
         {
-            XTrace.WriteLine("[{0}/{1}]开始保存配置", Category, UserId);
+            // 记录调用堆栈，找出是谁调用了SaveAll
+            var stackTrace = new System.Diagnostics.StackTrace(true);
+            var callerInfo = "";
+            for (var i = 1; i < Math.Min(stackTrace.FrameCount, 5); i++)
+            {
+                var frame = stackTrace.GetFrame(i);
+                if (frame != null)
+                {
+                    var method = frame.GetMethod();
+                    var fileName = frame.GetFileName();
+                    var lineNumber = frame.GetFileLineNumber();
+                    callerInfo += $"\n  [{i}] {method?.DeclaringType?.Name}.{method?.Name}() in {System.IO.Path.GetFileName(fileName)}:{lineNumber}";
+                }
+            }
+            
+            XTrace.WriteLine("[{0}/{1}]开始保存配置 - 调用堆栈:{2}", Category, UserId, callerInfo);
 
             var list = Parameter.FindAllByUserID(UserId, Category);
             Save(list, Root, null);
