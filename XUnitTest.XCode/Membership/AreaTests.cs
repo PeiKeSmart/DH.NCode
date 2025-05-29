@@ -214,6 +214,22 @@ public class AreaTests
     }
 
     [Fact]
+    public async void Download2024()
+    {
+        //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
+        //var url = "http://x.newlifex.com/202301xzqh.html";
+        var url = "http://x.newlifex.com/data/202401xzqh.html";
+        var file = "area2024.html".GetFullPath();
+        //if (!File.Exists(file))
+        {
+            var http = new HttpClient();
+            await http.DownloadFileAsync(url, file);
+        }
+
+        Assert.True(File.Exists(file));
+    }
+
+    [Fact]
     public void ParseTest()
     {
         var file = "area.html".GetFullPath();
