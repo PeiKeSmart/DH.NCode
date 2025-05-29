@@ -160,7 +160,7 @@ public class AreaTests
         var ar = Area.FindByID(450921102);
         Assert.Equal("杨梅", ar.Name);
 
-        var ps = ar.GetAllParents();
+        var ps = ar.GetAllParents(true);
         Assert.Equal(3, ps.Count);
 
         ar = ar.Parent;
@@ -417,8 +417,8 @@ public class AreaTests
     [TestOrder(80)]
     [Theory]
     [InlineData("182.90.206.131", 450000)]
-    [InlineData("116.234.90.174", 310000)]
-    [InlineData("116.233.20.228", 310000)]
+    [InlineData("116.234.90.174", 310100)]
+    [InlineData("116.233.20.228", 310100)]
     [InlineData("122.231.253.198", 330000)]
     public void SearchIP(String ip, Int32 areaId)
     {
@@ -470,6 +470,23 @@ public class AreaTests
     [InlineData("116.136.7.43", 150400)]
     public void SearchIP自治区(String ip, Int32 areaId)
     {
+        var list = Area.SearchIP(ip, 3);
+
+        Assert.True(list.Count > 0);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
+    }
+
+    [TestOrder(92)]
+    [Theory]
+    [InlineData("112.65.49.174", 310104)]
+    public void SearchIP上海(String ip, Int32 areaId)
+    {
+        var addr = ip.IPToAddress();
+        Assert.Equal("中国–上海–上海–徐汇区 联通/漕河泾数据中心", addr);
+
         var list = Area.SearchIP(ip, 3);
 
         Assert.True(list.Count > 0);
