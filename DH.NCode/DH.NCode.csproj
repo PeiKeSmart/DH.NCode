@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1;net9.0</TargetFrameworks>
     <AssemblyName>DH.NCode</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
     <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
