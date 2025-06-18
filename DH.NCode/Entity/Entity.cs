@@ -1707,7 +1707,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             var count = 0;
             foreach (var shard in shards)
             {
-                var shardSession = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
+                var connName = shard.ConnName ?? session.ConnName;
+                var tableName = shard.TableName ?? session.TableName;
+                
+                var shardSession = EntitySession<TEntity>.Create(connName, tableName);
                 count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty);
             }
             return count;
