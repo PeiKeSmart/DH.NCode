@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net452;net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>数据中间件MySql包</AssemblyTitle>
     <Description>引入MySql数据库驱动包</Description>
     <Company>湖北登灏科技有限公司</Company>
@@ -41,11 +41,8 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'!='net452'">
-    <PackageReference Include="MySql.Data" Version="9.3.0" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net452'">
-    <PackageReference Include="MySql.Data" Version="8.0.32.1" />
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />

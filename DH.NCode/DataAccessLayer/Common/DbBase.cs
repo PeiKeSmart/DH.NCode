@@ -462,11 +462,22 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public static DbProviderFactory? GetProviderFactory(String? name, String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
     {
+        // 支持adonet新的下载路径
+        var set = NewLife.Setting.Current;
+        var urls = set.PluginServer.Split([',', ';']).ToList();
+        var urls2 = new List<String>();
+        foreach (var item in urls)
+        {
+            if (!item.EndsWithIgnoreCase("/adonet", "/adonet/"))
+                urls2.Add(item.TrimEnd('/') + "/adonet");
+        }
+        urls2.AddRange(urls);
+
         try
         {
             if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(assemblyFile);
             var links = GetLinkNames(name, strict);
-            var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
+            var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","), urls2.Join(";"));
 
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
