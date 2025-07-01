@@ -38,7 +38,7 @@ internal class MySql : RemoteDb
 #if NETSTANDARD
             GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ??
 #endif
-    GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
+            GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
     private const String Server_Key = "Server";

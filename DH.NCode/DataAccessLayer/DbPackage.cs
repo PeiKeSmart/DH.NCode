@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;

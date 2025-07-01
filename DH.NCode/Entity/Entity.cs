@@ -12,7 +12,6 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Model;
 using XCode.Shards;
-using System.Diagnostics;
 
 namespace XCode;
 
@@ -1690,7 +1689,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (where == null || where.IsEmpty) return 0;
 
         var session = Meta.Session;
-        
+
         // 自动分表
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
@@ -1699,7 +1698,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             var db = session.Dal.Db;
             var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
             var whereClause = where?.GetString(db, ps) ?? String.Empty;
-            
+
             return Persistence.Delete(session, whereClause);
         }
         else
@@ -1709,7 +1708,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             {
                 var connName = shard.ConnName ?? session.ConnName;
                 var tableName = shard.TableName ?? session.TableName;
-                
+
                 var shardSession = EntitySession<TEntity>.Create(connName, tableName);
                 count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty);
             }
