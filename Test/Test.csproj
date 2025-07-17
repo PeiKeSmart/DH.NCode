@@ -34,12 +34,12 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="4.13.2025.701-beta0850" />
-    <PackageReference Include="DH.NRemoting" Version="4.13.2025.701-beta0940" />
-    <PackageReference Include="DH.NStardust" Version="4.13.2025.701-beta0954" />
+    <PackageReference Include="DH.NRedis" Version="4.13.2025.713-beta1514" />
+    <PackageReference Include="DH.NRemoting" Version="4.13.2025.711-beta0229" />
+    <PackageReference Include="DH.NStardust" Version="4.13.2025.711-beta0249" />
     <PackageReference Include="MySql.Data" Version="9.3.0" />
     <PackageReference Include="Net.IBM.Data.Db2" Version="9.0.0.200" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
     <PackageReference Include="SapHana.DotNetCore.Data.Provider" Version="2.11.14" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
