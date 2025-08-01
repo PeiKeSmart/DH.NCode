@@ -5,7 +5,7 @@
     <Description>引入MySql数据库驱动包</Description>
     <Company>湖北登灏科技有限公司</Company>
     <Copyright>©2020-2025 湖北登灏科技有限公司</Copyright>
-    <VersionPrefix>4.13</VersionPrefix>
+    <VersionPrefix>4.14</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
