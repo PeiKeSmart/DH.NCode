@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.IP;
@@ -15,7 +16,7 @@ using static XCode.Membership.Area;
 namespace XUnitTest.XCode.Membership;
 
 [Collection("Database")]
-[TestCaseOrderer("DH.UnitTest.PriorityOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class AreaTests
 {
     static AreaTests()
@@ -160,7 +161,7 @@ public class AreaTests
         var ar = Area.FindByID(450921102);
         Assert.Equal("杨梅", ar.Name);
 
-        var ps = ar.GetAllParents(true);
+        var ps = ar.GetAllParents();
         Assert.Equal(3, ps.Count);
 
         ar = ar.Parent;
@@ -184,8 +185,8 @@ public class AreaTests
         var ar = Area.FindByID(310116);
         Assert.Equal("金山", ar.Name);
 
-        var ps = ar.GetAllParents();
-        Assert.Equal(2, ps.Count);
+        var ps = ar.GetAllParents(true);
+        Assert.Equal(3, ps.Count);
 
         ar = ar.Parent;
         Assert.Equal("市辖区", ar.Name);
@@ -199,7 +200,7 @@ public class AreaTests
     }
 
     [Fact]
-    public async void Download()
+    public async Task Download()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         var url = "http://x.newlifex.com/202301xzqh.html";
@@ -214,7 +215,7 @@ public class AreaTests
     }
 
     [Fact]
-    public async void Download2024()
+    public async Task Download2024()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //var url = "http://x.newlifex.com/202301xzqh.html";
@@ -242,6 +243,23 @@ public class AreaTests
         var rs = Parse(txt).ToList();
         Assert.NotNull(rs);
         Assert.True(rs.Count > 3000);
+        Assert.Equal(3208, rs.Count);
+    }
+
+    [Fact]
+    public void ParseTest2024()
+    {
+        var file = "area2024.html".GetFullPath();
+        var txt = File.ReadAllText(file);
+        //foreach (var item in Area.Parse(txt))
+        //{
+        //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
+        //}
+
+        var rs = Parse(txt).ToList();
+        Assert.NotNull(rs);
+        Assert.True(rs.Count > 3000);
+        Assert.Equal(3213, rs.Count);
     }
 
     //[Fact]
@@ -262,11 +280,11 @@ public class AreaTests
     [Fact]
     public void ParseAndSave()
     {
-        var file = "area.html".GetFullPath();
+        var file = "area2024.html".GetFullPath();
         var txt = File.ReadAllText(file);
 
         var rs = Area.ParseAndSave(txt);
-        Assert.Equal(3208, rs.Count);
+        Assert.Equal(3213, rs.Count);
 
         var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
         Assert.NotNull(r);
@@ -290,7 +308,7 @@ public class AreaTests
         Area.Meta.Session.Truncate();
         var rs = Area.FetchAndSave();
         //Assert.Equal(3208, rs);
-        Assert.Equal(3217, rs);
+        Assert.Equal(3222, rs);
 
         var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
         Assert.NotNull(r);
@@ -305,7 +323,7 @@ public class AreaTests
 
     [TestOrder(0)]
     [Fact]
-    public async void Import()
+    public async Task Import()
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
 
@@ -322,10 +340,12 @@ public class AreaTests
             Area.Meta.Session.Truncate();
             var rs = Area.Import(file, true, 3, false);
             Assert.Equal(3639, rs);
+            Assert.Equal(3639, Area.FindCount());
 
             Area.Meta.Session.Truncate();
             rs = Area.Import(file, true, 4, true);
             Assert.Equal(46533, rs);
+            Assert.Equal(46533, Area.FindCount());
         }
 
         Area.Meta.Session.Dal.Db.ShowSQL = true;
@@ -340,7 +360,7 @@ public class AreaTests
 
         var rs = Area.Export(file);
         XTrace.WriteLine("rs={0}", rs);
-        Assert.Equal(46558, rs);
+        Assert.Equal(46565, rs);
         Assert.True(File.Exists(file.GetFullPath()));
 
         //File.Delete(file.GetFullPath());
@@ -433,8 +453,8 @@ public class AreaTests
     [TestOrder(80)]
     [Theory]
     [InlineData("182.90.206.131", 450000)]
-    [InlineData("116.234.90.174", 310100)]
-    [InlineData("116.233.20.228", 310100)]
+    [InlineData("116.234.90.174", 310000)]
+    [InlineData("116.233.20.228", 310000)]
     [InlineData("122.231.253.198", 330000)]
     public void SearchIP(String ip, Int32 areaId)
     {
@@ -450,8 +470,8 @@ public class AreaTests
     [TestOrder(80)]
     [Theory]
     [InlineData("112.32.148.126", 340100)]
-    [InlineData("116.234.90.174", 310000)]
-    [InlineData("116.233.20.228", 310000)]
+    [InlineData("116.234.90.174", 310100)]
+    [InlineData("116.233.20.228", 310100)]
     [InlineData("122.231.253.198", 330400)]
     public void SearchIP2(String ip, Int32 areaId)
     {
