@@ -149,7 +149,7 @@ public partial class Log : ILog, IEntity<ILog>
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
+    [BindColumn("CreateUserID", "创建用户", "", ShowIn = "Auto,-Search")]
     public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
     private String? _CreateIP;
@@ -298,6 +298,32 @@ public partial class Log : ILog, IEntity<ILog>
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="category">类别</param>
+    /// <param name="action">操作</param>
+    /// <param name="linkId">链接</param>
+    /// <param name="success">成功</param>
+    /// <param name="start">编号开始</param>
+    /// <param name="end">编号结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> Search(String? category, String action, Int64 linkId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+        if (linkId >= 0) exp &= _.LinkID == linkId;
+        if (success != null) exp &= _.Success == success;
+        exp &= _.ID.Between(start, end, Meta.Factory.Snow);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 数据清理
     /// <summary>清理指定时间段内的数据</summary>
     /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
@@ -307,34 +333,6 @@ public partial class Log : ILog, IEntity<ILog>
     public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)
     {
         return Delete(_.ID.Between(start, end, Meta.Factory.Snow), maximumRows);
-    }
-    #endregion
-
-    #region 高级查询
-    /// <summary>高级查询</summary>
-    /// <param name="category">类别</param>
-    /// <param name="action">操作</param>
-    /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="success">成功</param>
-    /// <param name="start">编号开始</param>
-    /// <param name="end">编号结束</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> Search(String? category, String action, Int64 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        if (success != null) exp &= _.Success == success;
-        exp &= _.ID.Between(start, end, Meta.Factory.Snow);
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
-
-        return FindAll(exp, page);
     }
     #endregion
 
