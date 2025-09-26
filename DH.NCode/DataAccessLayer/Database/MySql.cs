@@ -23,12 +23,12 @@ internal class MySql : RemoteDb
         var factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
-    // 已按需求停用 MySqlConnector 自动加载逻辑（否则在存在包时会优先于 MySql.Data 被采用）
-    //#if NETSTANDARD
-    //type = PluginHelper.LoadPlugin("MySqlConnector.MySqlConnectorFactory", null, "MySqlConnector.dll", null);
-    //factory = GetProviderFactory(type);
-    //if (factory != null) return factory;
-    //#endif
+        // 已按需求停用 MySqlConnector 自动加载逻辑（否则在存在包时会优先于 MySql.Data 被采用）
+        //#if NETSTANDARD
+        //type = PluginHelper.LoadPlugin("MySqlConnector.MySqlConnectorFactory", null, "MySqlConnector.dll", null);
+        //factory = GetProviderFactory(type);
+        //if (factory != null) return factory;
+        //#endif
 
         type = PluginHelper.LoadPlugin("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
         factory = GetProviderFactory(type);
@@ -36,7 +36,9 @@ internal class MySql : RemoteDb
 
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
         return GetProviderFactory(null, "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
-            //GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ?? // 禁用 MySqlConnector 回退
+            // #if NETSTANDARD
+            // GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ??
+            // #endif
             GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
@@ -104,7 +106,7 @@ internal class MySql : RemoteDb
     #region 数据库特性
 
     protected override String ReservedWordsStr => "ACCESSIBLE,ADD,ALL,ALTER,ANALYZE,AND,AS,ASC,ASENSITIVE,BEFORE,BETWEEN,BIGINT,BINARY,BLOB,BOTH,BY,CALL,CASCADE,CASE,CHANGE,CHAR,CHARACTER,CHECK,COLLATE,COLUMN,CONDITION,CONNECTION,CONSTRAINT,CONTINUE,CONTRIBUTORS,CONVERT,CREATE,CROSS,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_USER,CURSOR,DATABASE,DATABASES,DAY_HOUR,DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DEC,DECIMAL,DECLARE,DEFAULT,DELAYED,DELETE,DESC,DESCRIBE,DETERMINISTIC,DISTINCT,DISTINCTROW,DIV,DOUBLE,DROP,DUAL,EACH,ELSE,ELSEIF,ENCLOSED,ESCAPED,EXISTS,EXIT,EXPLAIN,FALSE,FETCH,FLOAT,FLOAT4,FLOAT8,FOR,FORCE,FOREIGN,FROM,FULLTEXT,GRANT,GROUP,HAVING,HIGH_PRIORITY,HOUR_MICROSECOND,HOUR_MINUTE,HOUR_SECOND,IF,IGNORE,IN,INDEX,INFILE,INNER,INOUT,INSENSITIVE,INSERT,INT,INT1,INT2,INT3,INT4,INT8,INTEGER,INTERVAL,INTO,IS,ITERATE,JOIN,KEY,KEYS,KILL,LEADING,LEAVE,LEFT,LIKE,LIMIT,LINEAR,LINES,LOAD,LOCALTIME,LOCALTIMESTAMP,LOCK,LONG,LONGBLOB,LONGTEXT,LOOP,LOW_PRIORITY,MATCH,MEDIUMBLOB,MEDIUMINT,MEDIUMTEXT,MIDDLEINT,MINUTE_MICROSECOND,MINUTE_SECOND,MOD,MODIFIES,NATURAL,NOT,NO_WRITE_TO_BINLOG,NULL,NUMERIC,ON,OPTIMIZE,OPTION,OPTIONALLY,OR,ORDER,OUT,OUTER,OUTFILE,PRECISION,PRIMARY,PROCEDURE,PURGE,RANGE,READ,READS,READ_ONLY,READ_WRITE,REAL,REFERENCES,REGEXP,RELEASE,RENAME,REPEAT,REPLACE,REQUIRE,RESTRICT,RETURN,REVOKE,RIGHT,RLIKE,SCHEMA,SCHEMAS,SECOND_MICROSECOND,SELECT,SENSITIVE,SEPARATOR,SET,SHOW,SMALLINT,SPATIAL,SPECIFIC,SQL,SQLEXCEPTION,SQLSTATE,SQLWARNING,SQL_BIG_RESULT,SQL_CALC_FOUND_ROWS,SQL_SMALL_RESULT,SSL,STARTING,STRAIGHT_JOIN,TABLE,TERMINATED,THEN,TINYBLOB,TINYINT,TINYTEXT,TO,TRAILING,TRIGGER,TRUE,UNDO,UNION,UNIQUE,UNLOCK,UNSIGNED,UPDATE,UPGRADE,USAGE,USE,USING,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VALUES,VARBINARY,VARCHAR,VARCHARACTER,VARYING,WHEN,WHERE,WHILE,WITH,WRITE,X509,XOR,YEAR_MONTH,ZEROFILL," +
-                "LOG,User,Role,Admin,Rank,Member,Groups,Error,MaxValue,MinValue,Signal";
+                "LOG,User,Role,Admin,Rank,Member,Groups,Error,MaxValue,MinValue,Signal,Offset";
 
     /// <summary>格式化关键字</summary>
     /// <param name="keyWord">关键字</param>
@@ -715,12 +717,12 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
-    // MySqlConnector 特殊处理已禁用（若恢复使用，请还原此分支）
-    //if (Database.Factory.GetType().Name.Contains("MySqlConnector"))
-    //{
-    //    var dbs = GetSchema(_.Databases, null);
-    //    return dbs != null && dbs.Select($"schema_name='{databaseName}'").Length > 0;
-    //}
+        // MySqlConnector 不支持获取单个数据库架构，需要整体获取后再过滤
+        if (Database.Factory.GetType().Name.Contains("MySqlConnector"))
+        {
+            var dbs = GetSchema(_.Databases, null);
+            return dbs != null && dbs.Select($"schema_name='{databaseName}'").Length > 0;
+        }
 
         var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
