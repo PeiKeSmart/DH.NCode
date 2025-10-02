@@ -83,12 +83,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NIP" Version="4.13.2025.902-beta1246" />
-    <PackageReference Include="DH.UnitTest" Version="4.13.2025.926-beta1103" />
+    <PackageReference Include="DH.NIP" Version="4.13.2025.926-beta1147" />
+    <PackageReference Include="DH.UnitTest" Version="4.13.2025.926-beta1148" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.9" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

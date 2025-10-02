@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>改进二进制序列化及内存占用，提升实体列表文件缓存性能，支持AI机器学习；改进精度位数以及默认值的正反向工程和代码生成；</PackageReleaseNotes>
+    <PackageReleaseNotes>优化实体的CopyFrom和Merge</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -113,6 +113,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="4.14.2025.926-beta1057" />
+    <PackageReference Include="DH.NCore" Version="4.15.2025.1002-beta0240" />
   </ItemGroup>
 </Project>
