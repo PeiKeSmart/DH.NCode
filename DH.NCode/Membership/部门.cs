@@ -170,11 +170,11 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
     private String? _CompanyId;
-    /// <summary>公司</summary>
-    [DisplayName("公司")]
-    [Description("公司")]
+    /// <summary>所属公司</summary>
+    [DisplayName("所属公司")]
+    [Description("所属公司")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("CompanyId", "公司", "")]
+    [BindColumn("CompanyId", "所属公司", "")]
     public String? CompanyId { get => _CompanyId; set { if (OnPropertyChanging("CompanyId", value)) { _CompanyId = value; OnPropertyChanged("CompanyId"); } } }
 
     private String? _CreateUser;
@@ -385,17 +385,25 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [Map(nameof(ManagerId), typeof(User), "ID")]
     public String? ManagerName => Manager?.ToString();
 
-    /// <summary>公司</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Company? Company => Extends.Get(nameof(Company), k => Company.FindById(CompanyId));
-
-    /// <summary>公司</summary>
-    [Map(nameof(CompanyId), typeof(Company), "Id")]
-    public String? Company => Company?.ToString();
-
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Department? FindByID(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.ID == id);
+    }
+
     /// <summary>根据租户、父级、名称查找</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
@@ -413,6 +421,34 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
 
+    /// <summary>根据名称查找</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Name == name);
+    }
+
+    /// <summary>根据父级、名称查找</summary>
+    /// <param name="parentId">父级</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
+    {
+        if (parentId < 0) return [];
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.ParentID == parentId & _.Name == name);
+    }
+
     /// <summary>根据代码查找</summary>
     /// <param name="code">代码</param>
     /// <returns>实体列表</returns>
@@ -426,8 +462,8 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         return FindAll(_.Code == code);
     }
 
-    /// <summary>根据公司查找</summary>
-    /// <param name="companyId">公司</param>
+    /// <summary>根据所属公司查找</summary>
+    /// <param name="companyId">所属公司</param>
     /// <returns>实体列表</returns>
     public static IList<Department> FindAllByCompanyId(String? companyId)
     {
@@ -444,7 +480,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
-    /// <param name="companyId">公司</param>
+    /// <param name="companyId">所属公司</param>
     /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
     /// <param name="enable">启用</param>
@@ -525,7 +561,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         /// <summary>扩展6</summary>
         public static readonly Field Ex6 = FindByName("Ex6");
 
-        /// <summary>公司</summary>
+        /// <summary>所属公司</summary>
         public static readonly Field CompanyId = FindByName("CompanyId");
 
         /// <summary>创建者</summary>
@@ -612,7 +648,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         /// <summary>扩展6</summary>
         public const String Ex6 = "Ex6";
 
-        /// <summary>公司</summary>
+        /// <summary>所属公司</summary>
         public const String CompanyId = "CompanyId";
 
         /// <summary>创建者</summary>

@@ -65,7 +65,7 @@ public partial class DepartmentModel : IModel
     /// <summary>扩展6</summary>
     public String? Ex6 { get; set; }
 
-    /// <summary>公司</summary>
+    /// <summary>所属公司</summary>
     public String? CompanyId { get; set; }
 
     /// <summary>创建者</summary>
