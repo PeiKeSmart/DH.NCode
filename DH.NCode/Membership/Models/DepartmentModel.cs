@@ -65,6 +65,9 @@ public partial class DepartmentModel : IModel
     /// <summary>扩展6</summary>
     public String? Ex6 { get; set; }
 
+    /// <summary>公司</summary>
+    public String? CompanyId { get; set; }
+
     /// <summary>创建者</summary>
     public String? CreateUser { get; set; }
 
@@ -120,6 +123,7 @@ public partial class DepartmentModel : IModel
                 "Ex4" => Ex4,
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
+                "CompanyId" => CompanyId,
                 "CreateUser" => CreateUser,
                 "CreateUserID" => CreateUserID,
                 "CreateIP" => CreateIP,
@@ -153,6 +157,7 @@ public partial class DepartmentModel : IModel
                 case "Ex4": Ex4 = Convert.ToString(value); break;
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
+                case "CompanyId": CompanyId = Convert.ToString(value); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": CreateUserID = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
@@ -190,6 +195,7 @@ public partial class DepartmentModel : IModel
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
+        CompanyId = model.CompanyId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;

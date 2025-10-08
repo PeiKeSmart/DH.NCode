@@ -107,6 +107,7 @@
         <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
         <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
         <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
+        <Column Name="CompanyId" DataType="String" Map="Company@Id@$" Description="公司" />
         <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
         <Column Name="CreateUserID" DataType="Int32" Description="创建用户" Category="扩展" />
         <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
@@ -123,6 +124,7 @@
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
         <Index Columns="UpdateTime" />
+        <Index Columns="CompanyId" />
       </Indexes>
     </Table>
     <Table Name="Role" Description="角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限">

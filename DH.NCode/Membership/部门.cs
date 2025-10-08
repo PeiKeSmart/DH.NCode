@@ -22,6 +22,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
+[BindIndex("IX_Department_CompanyId", false, "CompanyId")]
 [BindTable("Department", Description = "部门。组织机构，多级树状结构，支持多租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Department : IDepartment, IEntity<IDepartment>
 {
@@ -168,6 +169,14 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [BindColumn("Ex6", "扩展6", "")]
     public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
+    private String? _CompanyId;
+    /// <summary>公司</summary>
+    [DisplayName("公司")]
+    [Description("公司")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("CompanyId", "公司", "")]
+    public String? CompanyId { get => _CompanyId; set { if (OnPropertyChanging("CompanyId", value)) { _CompanyId = value; OnPropertyChanged("CompanyId"); } } }
+
     private String? _CreateUser;
     /// <summary>创建者</summary>
     [Category("扩展")]
@@ -272,6 +281,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
+        CompanyId = model.CompanyId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;
@@ -309,6 +319,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
             "Ex4" => _Ex4,
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
+            "CompanyId" => _CompanyId,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
             "CreateIP" => _CreateIP,
@@ -341,6 +352,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Ex4": _Ex4 = Convert.ToString(value); break;
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
+                case "CompanyId": _CompanyId = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -372,6 +384,14 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>管理者</summary>
     [Map(nameof(ManagerId), typeof(User), "ID")]
     public String? ManagerName => Manager?.ToString();
+
+    /// <summary>公司</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Company? Company => Extends.Get(nameof(Company), k => Company.FindById(CompanyId));
+
+    /// <summary>公司</summary>
+    [Map(nameof(CompanyId), typeof(Company), "Id")]
+    public String? Company => Company?.ToString();
 
     #endregion
 
@@ -405,12 +425,26 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
         return FindAll(_.Code == code);
     }
+
+    /// <summary>根据公司查找</summary>
+    /// <param name="companyId">公司</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByCompanyId(String? companyId)
+    {
+        if (companyId == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CompanyId.EqualIgnoreCase(companyId));
+
+        return FindAll(_.CompanyId == companyId);
+    }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
+    /// <param name="companyId">公司</param>
     /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
     /// <param name="enable">启用</param>
@@ -419,12 +453,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, Int32 parentId, String? companyId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (!companyId.IsNullOrEmpty()) exp &= _.CompanyId == companyId;
         if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
@@ -489,6 +524,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
         /// <summary>扩展6</summary>
         public static readonly Field Ex6 = FindByName("Ex6");
+
+        /// <summary>公司</summary>
+        public static readonly Field CompanyId = FindByName("CompanyId");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUser = FindByName("CreateUser");
@@ -573,6 +611,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
         /// <summary>扩展6</summary>
         public const String Ex6 = "Ex6";
+
+        /// <summary>公司</summary>
+        public const String CompanyId = "CompanyId";
 
         /// <summary>创建者</summary>
         public const String CreateUser = "CreateUser";
