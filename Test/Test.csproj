@@ -39,7 +39,7 @@
     <PackageReference Include="DH.NStardust" Version="4.15.2025.1002-beta0334" />
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="Net.IBM.Data.Db2" Version="9.0.0.300" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
     <PackageReference Include="SapHana.DotNetCore.Data.Provider" Version="2.11.14" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
