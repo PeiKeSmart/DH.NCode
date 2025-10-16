@@ -36,6 +36,7 @@ jobs:
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.DB2/DH.NCode.DB2.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.KingBase/DH.NCode.KingBase.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.HighGo/DH.NCode.HighGo.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out DH.NCode.VastBase/DH.NCode.VastBase.csproj
     - name: Publish
       run: |
         #dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/PeiKeSmart/index.json --api-key ${{ github.token }}
