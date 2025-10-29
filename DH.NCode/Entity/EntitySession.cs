@@ -217,18 +217,38 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                     // 因为CheckModel可能使用异步方式建表，导致InitData时表尚不存在
                     if (!DataTable.IsView)
                     {
-                        // 使用QueryCountFast快速检查表是否存在
-                        // information_schema查询：表存在返回行数，表不存在返回0
                         var dal = Dal;
+                        var needCheck = false;
+                        
+                        // 先用QueryCountFast快速检查(查information_schema，极快)
                         var count = dal.Session.QueryCountFast(FormatedTableName);
                         
-                        // count <= 0 表示表不存在或为空表
-                        // 由于InitData本身就是填充空表的，所以空表情况几乎不存在
-                        // 因此 count <= 0 基本可以判定为表不存在
+                        // count <= 0 可能表示表不存在，也可能是information_schema缓存未更新
+                        // 需要进一步精确验证
                         if (count <= 0)
                         {
+                            // 尝试真实查询表，验证表是否真的存在
+                            try
+                            {
+                                var builder = new SelectBuilder
+                                {
+                                    Table = FormatedTableName
+                                };
+                                FixBuilder(builder);
+                                dal.SelectCount(builder);
+                                // 查询成功，说明表存在(information_schema缓存延迟)
+                            }
+                            catch
+                            {
+                                // 查询失败，表确实不存在
+                                needCheck = true;
+                            }
+                        }
+                        
+                        if (needCheck)
+                        {
                             // 表不存在，强制同步创建表
-                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在(count={1})，立即创建", TableName, count);
+                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
                             try
                             {
                                 CheckTable();
