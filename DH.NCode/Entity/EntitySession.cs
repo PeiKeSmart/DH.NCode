@@ -213,6 +213,32 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             {
                 if (Factory.Default is EntityBase entity)
                 {
+                    // 在初始化数据前，确保表已创建
+                    // 因为CheckModel可能使用异步方式建表，导致InitData时表尚不存在
+                    try
+                    {
+                        // 尝试快速查询表是否存在
+                        var dal = Dal;
+                        if (!DataTable.IsView)
+                        {
+                            dal.Session.QueryCountFast(FormatedTableName);
+                        }
+                    }
+                    catch
+                    {
+                        // 表不存在，强制同步创建表
+                        try
+                        {
+                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
+                            CheckTable();
+                        }
+                        catch (Exception ex)
+                        {
+                            if (DAL.Debug) DAL.WriteLog("InitData前创建表[{0}]失败: {1}", TableName, ex.Message);
+                            throw;
+                        }
+                    }
+                    
                     entity.InitData();
                 }
             }
