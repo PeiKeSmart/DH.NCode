@@ -215,27 +215,39 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                 {
                     // 在初始化数据前，确保表已创建
                     // 因为CheckModel可能使用异步方式建表，导致InitData时表尚不存在
-                    try
+                    if (!DataTable.IsView)
                     {
-                        // 尝试快速查询表是否存在
-                        var dal = Dal;
-                        if (!DataTable.IsView)
-                        {
-                            dal.Session.QueryCountFast(FormatedTableName);
-                        }
-                    }
-                    catch
-                    {
-                        // 表不存在，强制同步创建表
+                        var needCreate = false;
                         try
                         {
-                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
-                            CheckTable();
+                            // 尝试执行一个简单查询验证表是否存在
+                            var dal = Dal;
+                            var builder = new SelectBuilder
+                            {
+                                Table = FormatedTableName
+                            };
+                            FixBuilder(builder);
+                            dal.SelectCount(builder);
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            if (DAL.Debug) DAL.WriteLog("InitData前创建表[{0}]失败: {1}", TableName, ex.Message);
-                            throw;
+                            // 查询失败说明表不存在
+                            needCreate = true;
+                        }
+
+                        if (needCreate)
+                        {
+                            // 表不存在，强制同步创建表
+                            try
+                            {
+                                if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
+                                CheckTable();
+                            }
+                            catch (Exception ex)
+                            {
+                                if (DAL.Debug) DAL.WriteLog("InitData前创建表[{0}]失败: {1}", TableName, ex.Message);
+                                throw;
+                            }
                         }
                     }
                     
