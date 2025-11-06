@@ -1,0 +1,40 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="iPhone" />
+    <Platform Name="iPhoneSimulator" />
+  </Configurations>
+  <Folder Name="/Others/">
+    <File Path=".editorconfig" />
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".github/instructions/xcode.instructions.md" />
+    <File Path=".github/workflows/publish-beta.yml" />
+    <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/test.yml" />
+    <File Path=".gitignore" />
+    <File Path="global.json" />
+    <File Path="NuGet.config" />
+    <File Path="Readme.MD" />
+  </Folder>
+  <Folder Name="/UnitTest/">
+    <Project Path="XUnitTest.XCode/XUnitTest.XCode.csproj">
+      <Build Solution="*|iPhone" Project="false" />
+      <Build Solution="*|iPhoneSimulator" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/驱动包/">
+    <Project Path="DH.NCode.DaMeng/DH.NCode.DaMeng.csproj" />
+    <Project Path="DH.NCode.DB2/DH.NCode.DB2.csproj" />
+    <Project Path="DH.NCode.HighGo/DH.NCode.HighGo.csproj" />
+    <Project Path="DH.NCode.KingBase/DH.NCode.KingBase.csproj" />
+    <Project Path="DH.NCode.MySql/DH.NCode.MySql.csproj" />
+    <Project Path="DH.NCode.Oracle/DH.NCode.Oracle.csproj" />
+    <Project Path="DH.NCode.PostgreSQL/DH.NCode.PostgreSQL.csproj" />
+    <Project Path="DH.NCode.SQLite/DH.NCode.SQLite.csproj" />
+    <Project Path="DH.NCode.SqlServer/DH.NCode.SqlServer.csproj" />
+    <Project Path="DH.NCode.VastBase/DH.NCode.VastBase.csproj" />
+  </Folder>
+  <Project Path="DH.NCode/DH.NCode.csproj" />
+  <Project Path="Test/Test.csproj" />
+  <Project Path="XCodeTool/XCodeTool.csproj" />
+</Solution>
