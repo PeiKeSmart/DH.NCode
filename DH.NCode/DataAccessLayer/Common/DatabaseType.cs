@@ -37,7 +37,7 @@ public enum DatabaseType
     //[Description("Firebird数据库")]
     //Firebird,
 
-    /// <summary>SqlCe数据库</summary>
+    /// <summary>PostgreSQL数据库</summary>
     [Description("PostgreSQL数据库")]
     PostgreSQL = 8,
 
@@ -64,6 +64,10 @@ public enum DatabaseType
     /// <summary>瀚高(HighGo)数据库</summary>
     [Description("瀚高(HighGo)数据库")]
     HighGo = 14,
+
+    /// <summary>VastBase数据库</summary>
+    [Description("VastBase数据库")]
+    VastBase = 15,
 
     ///// <summary>网络虚拟数据库</summary>
     //[Description("网络虚拟数据库")]
