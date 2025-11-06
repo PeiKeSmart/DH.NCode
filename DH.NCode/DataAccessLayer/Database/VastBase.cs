@@ -35,6 +35,13 @@ internal class VastBase : RemoteDb
             builder[Server_Key] = IPAddress.Loopback.ToString();
         }
 
+        // VastBase 官方推荐使用 Npgsql 5.0.10,但当前项目使用更高版本(8.x/9.x)
+        // 新版 Npgsql 在连接池归还时执行 DISCARD ALL 清理会话状态,但 VastBase 不支持 DISCARD 语句
+        // 通过 No Reset On Close 参数禁用此行为,避免 GetSchema 等元数据 API 调用时触发异常
+        // 注意:禁用后需确保应用层正确管理连接状态(事务回滚、临时表清理等)
+        // 理想方案:降级到 Npgsql 5.0.10 或使用 VastBase 官方的 Vastbase.NET 驱动
+        builder.TryAdd("No Reset On Close", "true");
+
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
     }
 
@@ -628,18 +635,8 @@ internal class VastBaseMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
-    protected override Boolean DatabaseExist(String databaseName)
-    {
-        //return base.DatabaseExist(databaseName);
-
-        var session = Database.CreateSession();
-        //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
-
     /// <summary>
-    /// 创建数据库的 SQL 语句，强制带上双引号。
+    /// 创建数据库的 SQL 语句,强制带上双引号。
     /// </summary>
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
