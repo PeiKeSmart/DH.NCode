@@ -36,6 +36,12 @@ internal class VastBase : RemoteDb
         }
 
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
+
+        // VastBase 必须指定 Search Path
+        if (!builder.TryGetValue("Search Path", out _) && !builder.TryGetValue("SearchPath", out _))
+        {
+            throw new ArgumentException("VastBase 连接字符串中必须包含 Search Path 参数,例如: Search Path=public");
+        }
     }
 
     #endregion 属性
