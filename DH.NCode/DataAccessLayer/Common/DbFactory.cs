@@ -21,6 +21,8 @@ public static class DbFactory
         Register<Hana>(DatabaseType.Hana);
         Register<KingBase>(DatabaseType.KingBase);
         Register<HighGo>(DatabaseType.HighGo);
+        Register<IRIS>(DatabaseType.IRIS);
+        Register<VastBase>(DatabaseType.VastBase);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);
         //Register<Network>(DatabaseType.Network);

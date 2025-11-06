@@ -11,7 +11,7 @@ using NewLife.Reflection;
 
 namespace XCode.DataAccessLayer;
 
-internal class VastBaseSQL : RemoteDb
+internal class VastBase : RemoteDb
 {
     #region 属性
 

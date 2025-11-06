@@ -2,26 +2,30 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
+
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+
 using Xunit;
+
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
-public class KingBaseTests
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
+public class IRISTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;User ID=system;Password=123456!@;Database=test;Port=54321";
+    private static String _ConnStr = "Server=127.0.0.1;User Id=_SYSTEM;Password=sys;namespace=user;Port=51783";
 
-    public KingBaseTests()
+    public IRISTests()
     {
-        var f = "Config\\KingBase.config".GetFullPath();
+        var f = "Config\\IRIS.config".GetFullPath();
         if (File.Exists(f))
             _ConnStr = File.ReadAllText(f);
         else
@@ -31,7 +35,7 @@ public class KingBaseTests
     [Fact]
     public void InitTest()
     {
-        var db = DbFactory.Create(DatabaseType.KingBase);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         Assert.NotNull(db);
 
         var factory = db.Factory;
@@ -53,7 +57,7 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void ConnectTest()
     {
-        var db = DbFactory.Create(DatabaseType.KingBase);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         var factory = db.Factory;
         var conn = factory.CreateConnection();
         conn.ConnectionString = _ConnStr;
@@ -63,11 +67,11 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void DALTest()
     {
-        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
-        var dal = DAL.Create("KingBase");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         Assert.NotNull(dal);
-        Assert.Equal("KingBase", dal.ConnName);
-        Assert.Equal(DatabaseType.KingBase, dal.DbType);
+        Assert.Equal("IRIS", dal.ConnName);
+        Assert.Equal(DatabaseType.IRIS, dal.DbType);
 
         var db = dal.Db;
         var connstr = db.ConnectionString;
@@ -80,11 +84,12 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void MetaTest()
     {
-        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
-        var dal = DAL.Create("KingBase");
-
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        DAL.AddConnStr("Membership", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         // 反向工程
         dal.SetTables(User.Meta.Table.DataTable);
+        EntityFactory.InitConnection("Membership");
 
         var tables = dal.Tables;
         Assert.NotNull(tables);
@@ -98,19 +103,19 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void SelectTest()
     {
-        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
-        var dal = DAL.Create("KingBase");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         try
         {
             dal.Execute("drop database  if EXISTS \"test\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=test;", "Database=Membership_Test;");
-        DAL.AddConnStr("KingBase_Select", connStr, null, "KingBase");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Test;");
+        DAL.AddConnStr("IRIS_Select", connStr, null, "IRIS");
 
-        Role.Meta.ConnName = "KingBase_Select";
-        Area.Meta.ConnName = "KingBase_Select";
+        Role.Meta.ConnName = "IRIS_Select";
+        Area.Meta.ConnName = "IRIS_Select";
 
         Role.Meta.Session.InitData();
 
@@ -134,8 +139,6 @@ public class KingBaseTests
         Assert.Equal(2, list6.Count);
         var list7 = Role.FindAll(Role._.Name.NotContains("用户"));
         Assert.Equal(2, list7.Count);
-        // 来个耗时操作，把前面堵住
-        Area.FetchAndSave();
 
         // 清理现场
         try
@@ -148,19 +151,19 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void TablePrefixTest()
     {
-        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
-        var dal = DAL.Create("KingBase");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         try
         {
             dal.Execute("drop database if EXISTS \"Membership_Table_Prefix\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=test;", "Database=Membership_Table_Prefix;");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Table_Prefix;");
         connStr += ";TablePrefix=member_";
-        DAL.AddConnStr("KingBase_Table_Prefix", connStr, null, "KingBase");
+        DAL.AddConnStr("IRIS_Table_Prefix", connStr, null, "IRIS");
 
-        Role.Meta.ConnName = "KingBase_Table_Prefix";
+        Role.Meta.ConnName = "IRIS_Table_Prefix";
 
         Role.Meta.Session.InitData();
 
@@ -180,8 +183,8 @@ public class KingBaseTests
 
     private IDisposable CreateForBatch(String action)
     {
-        var connStr = _ConnStr.Replace("Database=test;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "KingBase");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Batch;");
+        DAL.AddConnStr("Membership_Batch", connStr, null, "IRIS");
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
@@ -223,7 +226,7 @@ public class KingBaseTests
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;
-        DAL.AddConnStr(connName, _ConnStr, null, "KingBase");
+        DAL.AddConnStr(connName, _ConnStr, null, "IRIS");
         var dal = DAL.Create(connName);
 
         var table = User.Meta.Table.DataTable.Clone() as IDataTable;
@@ -249,9 +252,7 @@ public class KingBaseTests
     [Fact(Skip = "跳过")]
     public void QuerySqlTest()
     {
-        var connStr = _ConnStr.Replace("Database=test;", "Database=Membership;");
-
-        DAL.AddConnStr("Membership", connStr, null, "KingBase");
+        DAL.AddConnStr("Membership", _ConnStr, null, "IRIS");
         var dal = DAL.Create("Membership");
         var a = dal.Query<Role>("select * from \"Role\" order by \"ID\"");
 
@@ -286,7 +287,7 @@ public class KingBaseTests
 
         var str = """
             <EntityModel>
-             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="HighGo">
+             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="IRIS">
                 <Columns>
                   <Column Name="LogNr" ColumnName="LOG_NR_" DataType="Int32" RawType="numeric(19, 0)" Identity="True" PrimaryKey="True" />
                   <Column Name="Type" ColumnName="TYPE_" DataType="String" Length="64" />
@@ -308,9 +309,9 @@ public class KingBaseTests
         Assert.NotNull(table);
         Assert.Equal("ActEvtLog", table.Name);
         Assert.Equal("ACT_EVT_LOG", table.TableName);
-        Assert.Equal(DatabaseType.HighGo, table.DbType);
+        Assert.Equal(DatabaseType.IRIS, table.DbType);
 
-        var db = DbFactory.Create(DatabaseType.HighGo);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         var meta = db.CreateMetaData();
         var sql = meta.GetSchemaSQL(DDLSchema.CreateTable, table);
 
@@ -328,15 +329,15 @@ public class KingBaseTests
 	""LOCK_TIME_"" timestamp NULL,
 	""IS_PROCESSED_"" bit null
 )";
-        Assert.Equal(targetSql, sql);
+        Assert.Equal(targetSql, sql, true);
     }
 
     [Fact(Skip = "跳过")]
     public void BuildDeleteSql()
     {
-        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
-        var dal = DAL.Create("KingBase");
-        Role.Meta.ConnName = "KingBase";
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
+        Role.Meta.ConnName = "IRIS";
         Role.Meta.Session.InitData();
         var count = Role.Delete(Role._.Name == "管理员");
         Assert.Equal(count, 1);
