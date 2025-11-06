@@ -23,6 +23,8 @@ internal class VastBase : RemoteDb
     protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Npgsql.dll", "Npgsql.NpgsqlFactory");
 
     private const String Server_Key = "Server";
+    
+    internal String? _searchPath;
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
@@ -38,10 +40,13 @@ internal class VastBase : RemoteDb
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
 
         // VastBase 必须指定 Search Path
-        if (!builder.TryGetValue("Search Path", out _) && !builder.TryGetValue("SearchPath", out _))
+        if (!builder.TryGetValue("Search Path", out var searchPath) && !builder.TryGetValue("SearchPath", out searchPath))
         {
             throw new ArgumentException("VastBase 连接字符串中必须包含 Search Path 参数,例如: Search Path=public");
         }
+        
+        // 保存 Search Path,用于后续查询表结构
+        _searchPath = searchPath?.Split(',')[0].Trim();
     }
 
     #endregion 属性
@@ -691,7 +696,15 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var tables = base.OnGetTables(names);
         var session = Database.CreateSession();
         using var _ = session.SetShowSql(false);
-        const String sql = @"with tables as (
+        
+        // 获取 Search Path (当前 schema)
+        var searchPath = "public";
+        if (Database is VastBase vb && !String.IsNullOrEmpty(vb._searchPath))
+        {
+            searchPath = vb._searchPath;
+        }
+        
+        var sql = $@"with tables as (
   select c
     .oid,
     ns.nspname as schema_name,
@@ -719,7 +732,7 @@ from
   and d.objsubid = c.ordinal_position 
   and d.objsubid > 0 
 where
-  c.table_schema = 'public' 
+  c.table_schema = '{searchPath}' 
 order by
   t.schema_name,
   t.table_name,
