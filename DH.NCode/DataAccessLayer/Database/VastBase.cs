@@ -47,6 +47,12 @@ internal class VastBase : RemoteDb
         
         // 保存 Search Path,用于后续查询表结构
         _searchPath = searchPath?.Split(',')[0].Trim();
+        
+        // 打印 Search Path 信息,便于调试
+        if (!String.IsNullOrEmpty(_searchPath))
+        {
+            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}", ConnName, _searchPath);
+        }
     }
 
     #endregion 属性
