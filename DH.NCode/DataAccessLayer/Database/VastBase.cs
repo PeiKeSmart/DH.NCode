@@ -48,6 +48,10 @@ internal class VastBase : RemoteDb
         // 保存 Search Path,用于后续查询表结构
         _searchPath = searchPath?.Split(',')[0].Trim();
         
+        // VastBase 不支持 DISCARD 语句,禁用连接重置
+        // 避免报错: DISCARD statement is not yet supported
+        builder.TryAdd("No Reset On Close", "true");
+        
         // 打印 Search Path 信息,便于调试
         if (!String.IsNullOrEmpty(_searchPath))
         {
