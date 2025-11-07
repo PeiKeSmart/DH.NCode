@@ -52,18 +52,10 @@ internal class VastBase : RemoteDb
         // 避免报错: DISCARD statement is not yet supported
         builder.TryAdd("No Reset On Close", "true");
         
-        // 设置 DBCompatibility 为 PostgreSQL(默认),确保返回的对象名称为小写
-        // 如需大写可设置为 Oracle,但会导致与 XCode ORM 的命名冲突
-        if (!builder.TryGetValue("DBCompatibility", out var _))
-        {
-            builder["DBCompatibility"] = "PostgreSQL";
-        }
-        
-        // 打印配置信息,便于调试
+        // 打印 Search Path 信息,便于调试
         if (!String.IsNullOrEmpty(_searchPath))
         {
-            var dbCompat = builder.TryGetValue("DBCompatibility", out var compat) ? compat : "PostgreSQL";
-            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}, DBCompatibility: {2}", ConnName, _searchPath, dbCompat);
+            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}", ConnName, _searchPath);
         }
     }
 
