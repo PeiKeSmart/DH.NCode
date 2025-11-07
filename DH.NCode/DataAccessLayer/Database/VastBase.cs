@@ -792,7 +792,17 @@ ORDER BY
                 column.Description = row["column_description"]?.ToString();
                 column.RawType = row["data_type"]?.ToString();
                 column.Nullable = row["is_nullable"]?.ToString() == "YES";
-                column.DefaultValue = row["column_default"]?.ToString();
+                
+                var defaultValue = row["column_default"]?.ToString();
+                column.DefaultValue = defaultValue;
+                
+                // 识别自增字段 (serial/bigserial 或 nextval)
+                var rawType = column.RawType ?? "";
+                if (defaultValue != null && 
+                    (defaultValue.Contains("nextval") || rawType == "serial" || rawType == "bigserial"))
+                {
+                    column.Identity = true;
+                }
                 
                 // 解析数据类型
                 if (Int32.TryParse(row["character_maximum_length"]?.ToString(), out var len))
@@ -803,6 +813,15 @@ ORDER BY
                     column.Scale = scale;
                 
                 table.Columns.Add(column);
+            }
+            
+            // 让基类处理数据类型映射
+            foreach (var col in table.Columns)
+            {
+                // 调用 GetDataType 来设置正确的 C# 类型
+                var dataType = GetDataType(col);
+                if (dataType != null)
+                    col.DataType = dataType;
             }
             
             // 查询索引和主键
