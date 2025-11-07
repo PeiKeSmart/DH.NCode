@@ -698,6 +698,45 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
 
+    public override String CreateIndexSQL(IDataIndex index)
+    {
+        // VastBase/PostgreSQL 中索引名不区分大小写
+        // 检查数据库中是否已存在同名索引(忽略大小写)
+        var table = index.Table;
+        if (table?.Indexes != null)
+        {
+            foreach (var existingIndex in table.Indexes)
+            {
+                // 不区分大小写比对索引名和列
+                if (existingIndex.Name.EqualIgnoreCase(index.Name) &&
+                    existingIndex.Columns != null && index.Columns != null &&
+                    existingIndex.Columns.Length == index.Columns.Length)
+                {
+                    var allMatch = true;
+                    for (var i = 0; i < existingIndex.Columns.Length; i++)
+                    {
+                        if (!existingIndex.Columns[i].EqualIgnoreCase(index.Columns[i]))
+                        {
+                            allMatch = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allMatch)
+                    {
+                        // 索引已存在,不需要创建
+                        DAL.WriteLog("[{0}]VastBase 索引 {1} 已存在(不区分大小写匹配),跳过创建", 
+                            Database.ConnName, index.Name);
+                        return String.Empty;
+                    }
+                }
+            }
+        }
+        
+        // 索引不存在,生成创建语句
+        return base.CreateIndexSQL(index);
+    }
+
     #endregion 架构定义
 
     #region 表构架
@@ -869,15 +908,16 @@ ORDER BY
                 
                 foreach (var idxKvp in idxDict)
                 {
-                    var indexName = idxKvp.Key;
+                    var dbIndexName = idxKvp.Key;  // 数据库实际索引名(小写)
                     var idxRows = idxKvp.Value;
-                    if (String.IsNullOrEmpty(indexName) || idxRows.Count == 0) continue;
+                    if (String.IsNullOrEmpty(dbIndexName) || idxRows.Count == 0) continue;
                     
                     var isPrimary = idxRows[0]["is_primary"]?.ToString() == "True";
                     var isUnique = idxRows[0]["is_unique"]?.ToString() == "True";
                     
                     var index = table.CreateIndex();
-                    index.Name = indexName;
+                    // 使用数据库实际的索引名(小写),便于在 CreateIndexSQL 中进行不区分大小写的比对
+                    index.Name = dbIndexName;
                     index.PrimaryKey = isPrimary;
                     index.Unique = isUnique;
                     
@@ -891,7 +931,7 @@ ORDER BY
                     index.Columns = colNames.ToArray();
                     
                     DAL.WriteLog("[{0}]VastBase 找到索引: {1}, Columns=[{2}], Primary={3}, Unique={4}", 
-                        Database.ConnName, indexName, String.Join(",", index.Columns), isPrimary, isUnique);
+                        Database.ConnName, dbIndexName, String.Join(",", index.Columns), isPrimary, isUnique);
                     
                     table.Indexes.Add(index);
                     
