@@ -724,7 +724,9 @@ internal class VastBaseMetaData : RemoteDbMetaData
                     
                     if (allMatch)
                     {
-                        // 索引已存在(不区分大小写匹配),不需要创建
+                        // 索引已存在,不需要创建
+                        DAL.WriteLog("[{0}]VastBase 索引 {1} 已存在(不区分大小写匹配),跳过创建", 
+                            Database.ConnName, index.Name);
                         return String.Empty;
                     }
                 }
@@ -884,6 +886,8 @@ ORDER BY
     i.relname, a.attnum";
     
             var idxDs = session.Query(idxSql);
+            DAL.WriteLog("[{0}]VastBase 查询表 '{1}'(db:'{2}') 的索引,返回 {3} 行", Database.ConnName, tableName, dbTableName,
+                idxDs.Tables.Count > 0 ? idxDs.Tables[0].Rows.Count : 0);
             
             if (idxDs.Tables.Count > 0 && idxDs.Tables[0].Rows.Count > 0)
             {
@@ -925,6 +929,9 @@ ORDER BY
                             colNames.Add(colName!);
                     }
                     index.Columns = colNames.ToArray();
+                    
+                    DAL.WriteLog("[{0}]VastBase 找到索引: {1}, Columns=[{2}], Primary={3}, Unique={4}", 
+                        Database.ConnName, dbIndexName, String.Join(",", index.Columns), isPrimary, isUnique);
                     
                     table.Indexes.Add(index);
                     
