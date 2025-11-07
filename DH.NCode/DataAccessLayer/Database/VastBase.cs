@@ -521,7 +521,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
         { typeof(Single), new String[] { "float" } },
         { typeof(Double), new String[] { "float8", "double precision" } },
         { typeof(Decimal), new String[] { "decimal" } },
-        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "date" } },
+        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date", "time" } },
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
 
@@ -775,6 +775,10 @@ ORDER BY
             table.TableName = tableName;
             table.DbType = Database.Type;
             
+            // 从数据库获取实际的表名(小写),用于后续查询索引
+            var dbTableName = tableRows[0]["table_name"]?.ToString();
+            if (String.IsNullOrEmpty(dbTableName)) continue;
+            
             // 表描述(只取第一行)
             if (tableRows.Count > 0)
             {
@@ -824,7 +828,7 @@ ORDER BY
                     col.DataType = dataType;
             }
             
-            // 查询索引和主键
+            // 查询索引和主键(使用数据库实际表名)
             var idxSql = $@"
 SELECT 
     i.relname as index_name,
@@ -838,11 +842,14 @@ FROM
     JOIN pg_catalog.pg_class i ON i.oid = ix.indexrelid
     JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
 WHERE 
-    n.nspname = '{searchPath}' AND t.relname = '{tableName}'
+    n.nspname = '{searchPath}' AND t.relname = '{dbTableName}'
 ORDER BY 
     i.relname, a.attnum";
     
             var idxDs = session.Query(idxSql);
+            DAL.WriteLog("[{0}]VastBase 查询表 '{1}'(db:'{2}') 的索引,返回 {3} 行", Database.ConnName, tableName, dbTableName,
+                idxDs.Tables.Count > 0 ? idxDs.Tables[0].Rows.Count : 0);
+            
             if (idxDs.Tables.Count > 0 && idxDs.Tables[0].Rows.Count > 0)
             {
                 var idxDt = idxDs.Tables[0];
@@ -882,6 +889,9 @@ ORDER BY
                             colNames.Add(colName!);
                     }
                     index.Columns = colNames.ToArray();
+                    
+                    DAL.WriteLog("[{0}]VastBase 找到索引: {1}, Columns=[{2}], Primary={3}, Unique={4}", 
+                        Database.ConnName, indexName, String.Join(",", index.Columns), isPrimary, isUnique);
                     
                     table.Indexes.Add(index);
                     
