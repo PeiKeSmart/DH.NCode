@@ -52,10 +52,18 @@ internal class VastBase : RemoteDb
         // 避免报错: DISCARD statement is not yet supported
         builder.TryAdd("No Reset On Close", "true");
         
-        // 打印 Search Path 信息,便于调试
+        // 设置 DBCompatibility 为 PostgreSQL(默认),确保返回的对象名称为小写
+        // 如需大写可设置为 Oracle,但会导致与 XCode ORM 的命名冲突
+        if (!builder.TryGetValue("DBCompatibility", out var _))
+        {
+            builder["DBCompatibility"] = "PostgreSQL";
+        }
+        
+        // 打印配置信息,便于调试
         if (!String.IsNullOrEmpty(_searchPath))
         {
-            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}", ConnName, _searchPath);
+            var dbCompat = builder.TryGetValue("DBCompatibility", out var compat) ? compat : "PostgreSQL";
+            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}, DBCompatibility: {2}", ConnName, _searchPath, dbCompat);
         }
     }
 
@@ -241,10 +249,9 @@ internal class VastBase : RemoteDb
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;
 
-        ////如果包含大写字符，就加上引号
-        //if (name.Any(Char.IsUpper)) return $"\"{name}\"";
-
-        return name;
+        // VastBase/PostgreSQL 中未加引号的标识符会自动转为小写
+        // 为了与数据库实际存储的名称一致,这里也转为小写
+        return name.ToLower();
     }
 
     /// <inheritdoc/>
@@ -771,13 +778,14 @@ ORDER BY
             // 表名过滤
             if (names != null && names.Length > 0 && !names.Any(n => n.EqualIgnoreCase(tableName))) continue;
             
-            var table = DAL.CreateTable();
-            table.TableName = tableName;
-            table.DbType = Database.Type;
-            
-            // 从数据库获取实际的表名(小写),用于后续查询索引
+            // 从数据库获取实际的表名(小写)
             var dbTableName = tableRows[0]["table_name"]?.ToString();
             if (String.IsNullOrEmpty(dbTableName)) continue;
+            
+            var table = DAL.CreateTable();
+            // 使用数据库实际存储的表名(小写),这样生成的索引名也会是小写,与数据库匹配
+            table.TableName = dbTableName!;
+            table.DbType = Database.Type;
             
             // 表描述(只取第一行)
             if (tableRows.Count > 0)
