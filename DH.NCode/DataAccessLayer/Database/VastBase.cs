@@ -699,7 +699,8 @@ internal class VastBaseMetaData : RemoteDbMetaData
     #region 表构架
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var tables = base.OnGetTables(names);
+        // VastBase 不使用 GetSchema,直接查询系统表避免 pg_user 权限问题
+        var list = new List<IDataTable>();
         var session = Database.CreateSession();
         using var _ = session.SetShowSql(false);
         
@@ -710,95 +711,175 @@ internal class VastBaseMetaData : RemoteDbMetaData
             searchPath = vb._searchPath;
         }
         
-        var sql = $@"with tables as (
-  select c
-    .oid,
-    ns.nspname as schema_name,
-    c.relname as table_name,
-    d.description as table_description,
-    pg_get_userbyid ( c.relowner ) as table_owner 
-  from
-    pg_catalog.pg_class
-    as c join pg_catalog.pg_namespace as ns on c.relnamespace = ns.
-    oid left join pg_catalog.pg_description d on c.oid = d.objoid 
-    and d.objsubid = 0 
-  where
-    ns.nspname not in ( 'pg_catalog' ) 
-)  select 
-c.table_name as table_name,
-t.table_description,
-c.column_name as column_name,
-c.ordinal_position,
-d.description as column_description
-from
-  tables
-  t join information_schema.columns c on c.table_schema = t.schema_name 
-  and c.table_name = t.
-  table_name left join pg_catalog.pg_description d on d.objoid = t.oid 
-  and d.objsubid = c.ordinal_position 
-  and d.objsubid > 0 
-where
-  c.table_schema = '{searchPath}' 
-order by
-  t.schema_name,
-  t.table_name,
-  c.ordinal_position";
+        DAL.WriteLog("[{0}]VastBase 查询表结构,使用 Schema: {1}", Database.ConnName, searchPath);
+        
+        // 查询表列表和列信息
+        var sql = $@"
+SELECT 
+    t.tablename as table_name,
+    obj_description((quote_ident(t.schemaname)||'.'||quote_ident(t.tablename))::regclass) as table_description,
+    c.column_name,
+    c.ordinal_position,
+    c.data_type,
+    c.character_maximum_length,
+    c.numeric_precision,
+    c.numeric_scale,
+    c.is_nullable,
+    c.column_default,
+    col_description((quote_ident(t.schemaname)||'.'||quote_ident(t.tablename))::regclass, c.ordinal_position) as column_description
+FROM 
+    pg_catalog.pg_tables t
+    LEFT JOIN information_schema.columns c ON c.table_schema = t.schemaname AND c.table_name = t.tablename
+WHERE 
+    t.schemaname = '{searchPath}'
+ORDER BY 
+    t.tablename, c.ordinal_position";
+    
         var ds = session.Query(sql);
-        if (ds.Tables.Count != 0)
+        if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
         {
-            var dt = ds.Tables[0]!;
-            foreach (var table in tables)
+            DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中未找到任何表", Database.ConnName, searchPath);
+            return list;
+        }
+        
+        var dt = ds.Tables[0];
+        
+        // 按表名分组
+        var tableDict = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+        foreach (DataRow row in dt.Rows)
+        {
+            var tableName = row["table_name"]?.ToString();
+            if (String.IsNullOrEmpty(tableName)) continue;
+            
+            if (!tableDict.ContainsKey(tableName!))
+                tableDict[tableName!] = new List<DataRow>();
+            
+            tableDict[tableName!].Add(row);
+        }
+        
+        foreach (var kvp in tableDict)
+        {
+            var tableName = kvp.Key;
+            var tableRows = kvp.Value;
+            if (String.IsNullOrEmpty(tableName)) continue;
+            
+            // 表名过滤
+            if (names != null && names.Length > 0 && !names.Any(n => n.EqualIgnoreCase(tableName))) continue;
+            
+            var table = DAL.CreateTable();
+            table.TableName = tableName;
+            table.DbType = Database.Type;
+            
+            // 表描述(只取第一行)
+            if (tableRows.Count > 0)
             {
-                var rows = dt.Select($"table_name = '{table.TableName}'");
-                if (rows is { Length: > 0 })
+                table.Description = tableRows[0]["table_description"]?.ToString();
+            }
+            
+            // 添加列
+            foreach (var row in tableRows)
+            {
+                var columnName = row["column_name"]?.ToString();
+                if (String.IsNullOrEmpty(columnName)) continue;
+                
+                var column = table.CreateColumn();
+                column.ColumnName = columnName!;
+                column.Description = row["column_description"]?.ToString();
+                column.RawType = row["data_type"]?.ToString();
+                column.Nullable = row["is_nullable"]?.ToString() == "YES";
+                column.DefaultValue = row["column_default"]?.ToString();
+                
+                // 解析数据类型
+                if (Int32.TryParse(row["character_maximum_length"]?.ToString(), out var len))
+                    column.Length = len;
+                if (Int32.TryParse(row["numeric_precision"]?.ToString(), out var precision))
+                    column.Precision = precision;
+                if (Int32.TryParse(row["numeric_scale"]?.ToString(), out var scale))
+                    column.Scale = scale;
+                
+                table.Columns.Add(column);
+            }
+            
+            // 查询索引和主键
+            var idxSql = $@"
+SELECT 
+    i.relname as index_name,
+    a.attname as column_name,
+    ix.indisprimary as is_primary,
+    ix.indisunique as is_unique
+FROM 
+    pg_catalog.pg_class t
+    JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
+    JOIN pg_catalog.pg_index ix ON ix.indrelid = t.oid
+    JOIN pg_catalog.pg_class i ON i.oid = ix.indexrelid
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+WHERE 
+    n.nspname = '{searchPath}' AND t.relname = '{tableName}'
+ORDER BY 
+    i.relname, a.attnum";
+    
+            var idxDs = session.Query(idxSql);
+            if (idxDs.Tables.Count > 0 && idxDs.Tables[0].Rows.Count > 0)
+            {
+                var idxDt = idxDs.Tables[0];
+                
+                // 按索引名分组
+                var idxDict = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow row in idxDt.Rows)
                 {
-                    if (String.IsNullOrWhiteSpace(table.Description))
+                    var indexName = row["index_name"]?.ToString();
+                    if (String.IsNullOrEmpty(indexName)) continue;
+                    
+                    if (!idxDict.ContainsKey(indexName!))
+                        idxDict[indexName!] = new List<DataRow>();
+                    
+                    idxDict[indexName!].Add(row);
+                }
+                
+                foreach (var idxKvp in idxDict)
+                {
+                    var indexName = idxKvp.Key;
+                    var idxRows = idxKvp.Value;
+                    if (String.IsNullOrEmpty(indexName) || idxRows.Count == 0) continue;
+                    
+                    var isPrimary = idxRows[0]["is_primary"]?.ToString() == "True";
+                    var isUnique = idxRows[0]["is_unique"]?.ToString() == "True";
+                    
+                    var index = table.CreateIndex();
+                    index.Name = indexName;
+                    index.PrimaryKey = isPrimary;
+                    index.Unique = isUnique;
+                    
+                    var colNames = new List<String>();
+                    foreach (var idxRow in idxRows)
                     {
-                        foreach (var row in rows)
-                        {
-                            table.Description = Convert.ToString(row["table_description"]);
-                            break;
-                        }
+                        var colName = idxRow["column_name"]?.ToString();
+                        if (!String.IsNullOrEmpty(colName))
+                            colNames.Add(colName!);
                     }
-                    foreach (var row in rows)
+                    index.Columns = colNames.ToArray();
+                    
+                    table.Indexes.Add(index);
+                    
+                    // 标记主键列
+                    if (isPrimary)
                     {
-                        var columnName = Convert.ToString(row["column_name"]);
-                        if (String.IsNullOrWhiteSpace(columnName)) continue;
-                        var col = table.GetColumn(columnName);
-                        if (col == null) continue;
-                        if (String.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
+                        foreach (var colName in index.Columns)
+                        {
+                            var col = table.GetColumn(colName);
+                            if (col != null) col.PrimaryKey = true;
+                        }
                     }
                 }
             }
+            
+            // 修正关系数据
+            table.Fix();
+            list.Add(table);
         }
-
-        var idxs = tables.SelectMany(f => f.Indexes.Select(f => f.Name)).ToArray();
-        if (idxs.Length > 0)
-        {
-            var idx_sql = $"SELECT conname FROM pg_constraint WHERE contype = 'p' AND conname IN (" +
-                $"{String.Join(",", idxs.Select(f => $"'{f}'"))})";
-            ds = session.Query(idx_sql);
-            if (ds.Tables.Count != 0)
-            {
-                var dt = ds.Tables[0]!;
-                var set = new HashSet<String>();
-                foreach (DataRow dr in dt.Rows)
-                {
-                    set.Add(Convert.ToString(dr[0]));
-                }
-                if (set.Count > 0)
-                {
-                    foreach (var tbl in tables)
-                    {
-                        foreach (var idx in tbl.Indexes)
-                        {
-                            if (!String.IsNullOrWhiteSpace(idx.Name) && set.Contains(idx.Name!)) idx.PrimaryKey = true;
-                        }
-                    }
-                }
-            }
-        }
-        return tables;
+        
+        DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中找到 {2} 个表", Database.ConnName, searchPath, list.Count);
+        return list;
     }
     #endregion
 }
