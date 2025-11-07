@@ -651,12 +651,13 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
-        //return base.DatabaseExist(databaseName);
-
+        // 不使用 GetSchema,直接查询 pg_database 避免 pg_user 权限问题
         var session = Database.CreateSession();
-        //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
+        
+        var sql = $"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{databaseName}'";
+        var ds = session.Query(sql);
+        
+        return ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0;
     }
 
     /// <summary>
