@@ -650,6 +650,14 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
+        // 日志:显示比较的详细信息
+        WriteLog("IsColumnTypeChanged: 字段[{0}] 实体DataType={1}, 实体RawType={2}, 数据库DataType={3}, 数据库RawType={4}",
+            entityColumn.Name,
+            entityColumn.DataType?.Name ?? "(null)",
+            entityColumn.RawType ?? "(null)",
+            dbColumn.DataType?.Name ?? "(null)",
+            dbColumn.RawType ?? "(null)");
+
         // 如果实体字段的 DataType 为 null,尝试从 RawType 反推
         // (ModelHelper.FixDefaultByType 会将 DataType 设为 null,以便写入 XML 时不重复)
         if (entityColumn.DataType == null && !String.IsNullOrEmpty(entityColumn.RawType))
@@ -664,6 +672,12 @@ internal class VastBaseMetaData : RemoteDbMetaData
                 {
                     tempField.DataType = dataType;
                     
+                    WriteLog("  → 从实体RawType[{0}]推断出DataType={1}, 与数据库DataType={2} {3}",
+                        entityColumn.RawType,
+                        tempField.DataType.Name,
+                        dbColumn.DataType?.Name ?? "(null)",
+                        tempField.DataType == dbColumn.DataType ? "匹配✓" : "不匹配✗");
+                    
                     // 使用推断出的 DataType 进行比较
                     if (tempField.DataType == dbColumn.DataType)
                         return false;
@@ -675,6 +689,11 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var entityRawType = NormalizeRawType(entityColumn.RawType, entityColumn.DataType);
         var dbRawType = NormalizeRawType(dbColumn.RawType, dbColumn.DataType);
 
+        WriteLog("  → 标准化后: 实体RawType={0}, 数据库RawType={1} {2}",
+            entityRawType ?? "(null)",
+            dbRawType ?? "(null)",
+            (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType) && entityRawType.EqualIgnoreCase(dbRawType)) ? "匹配✓" : "继续基类比较");
+
         // 如果标准化后的 RawType 相同,则认为类型未改变
         if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
         {
@@ -682,7 +701,10 @@ internal class VastBaseMetaData : RemoteDbMetaData
                 return false;
         }
 
-        return base.IsColumnTypeChanged(entityColumn, dbColumn);
+        var baseResult = base.IsColumnTypeChanged(entityColumn, dbColumn);
+        WriteLog("  → 基类比较结果: {0}", baseResult ? "类型已改变" : "类型未改变");
+        
+        return baseResult;
     }
 
     /// <summary>标准化 RawType,将不支持的类型转换为 VastBase 支持的类型</summary>
