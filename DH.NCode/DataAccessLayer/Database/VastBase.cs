@@ -648,6 +648,38 @@ internal class VastBaseMetaData : RemoteDbMetaData
         return base.GetDefault(field, onlyDefine);
     }
 
+    protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
+    {
+        // 标准化 RawType:将 MySQL 的 tinyint/int1 转换为 VastBase 的标准类型
+        var entityRawType = NormalizeRawType(entityColumn.RawType, entityColumn.DataType);
+        var dbRawType = NormalizeRawType(dbColumn.RawType, dbColumn.DataType);
+
+        // 如果标准化后的 RawType 相同,则认为类型未改变
+        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
+        {
+            if (entityRawType.EqualIgnoreCase(dbRawType))
+                return false;
+        }
+
+        return base.IsColumnTypeChanged(entityColumn, dbColumn);
+    }
+
+    /// <summary>标准化 RawType,将不支持的类型转换为 VastBase 支持的类型</summary>
+    private String? NormalizeRawType(String? rawType, Type? dataType)
+    {
+        if (String.IsNullOrEmpty(rawType)) return rawType;
+
+        var rt = rawType.ToLower();
+        // tinyint(1) 或 int1 转换
+        if (rt.StartsWith("tinyint") || rt.StartsWith("int1"))
+        {
+            if (dataType == typeof(Boolean)) return "boolean";
+            if (dataType == typeof(Byte)) return "smallint";
+        }
+
+        return rawType;
+    }
+
     #region 架构定义
 
     //public override object SetSchema(DDLSchema schema, params object[] values)
