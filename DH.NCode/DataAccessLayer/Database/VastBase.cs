@@ -513,7 +513,8 @@ internal class VastBaseMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), new String[] { "bytea" } },
-        { typeof(Byte), new String[] { "smallint", "int2" } },
+        // Byte 类型映射移除 - PostgreSQL/VastBase 的 smallint 是有符号 16 位整数,应映射到 Int16
+        // 如果需要存储 0-255 的 Byte 值,应使用 Int16 类型
         { typeof(Boolean), new String[] { "boolean", "bool" } },
         { typeof(Int16), new String[] { "smallint", "int2" } },
         { typeof(Int32), new String[] { "integer", "int", "int4" } },
@@ -538,6 +539,15 @@ internal class VastBaseMetaData : RemoteDbMetaData
             var type = base.GetDataType(clone);
             if (type != null) return type.MakeArrayType();
         }
+        
+        // 强制修正:smallint/int2 必须映射为 Int16,不能是 Byte
+        // 这样可以确保从数据库反向工程读取的类型与实体定义一致
+        var rawType = field.RawType?.ToLower();
+        if (rawType == "smallint" || rawType == "int2")
+        {
+            return typeof(Int16);
+        }
+        
         return base.GetDataType(field);
     }
     #endregion 数据类型
@@ -595,6 +605,14 @@ internal class VastBaseMetaData : RemoteDbMetaData
             if (field.DataType == typeof(Int64)) return "bigserial";
         }
         
+        // 处理 Byte 类型:PostgreSQL/VastBase 没有无符号 8 位整数类型
+        // Byte (0-255) 使用 smallint (Int16) 存储
+        if (field.DataType == typeof(Byte))
+        {
+            WriteLog("字段[{0}]类型为Byte,VastBase不支持该类型,自动使用smallint(Int16)替代", field.Name);
+            return "smallint";
+        }
+        
         // VastBase/PostgreSQL 不支持 tinyint 或 int1,需要转换
         // 当 RawType 是 tinyint 或 int1 时,根据 DataType 选择合适的类型
         if (!field.RawType.IsNullOrEmpty())
@@ -602,9 +620,9 @@ internal class VastBaseMetaData : RemoteDbMetaData
             var rawType = field.RawType.ToLower();
             if (rawType.StartsWith("tinyint") || rawType.StartsWith("int1"))
             {
-                // Boolean 使用 boolean,Byte 使用 smallint
+                // Boolean 使用 boolean,其他使用 smallint
                 if (field.DataType == typeof(Boolean)) return "boolean";
-                if (field.DataType == typeof(Byte)) return "smallint";
+                return "smallint";
             }
         }
         
@@ -657,6 +675,25 @@ internal class VastBaseMetaData : RemoteDbMetaData
             entityColumn.RawType ?? "(null)",
             dbColumn.DataType?.Name ?? "(null)",
             dbColumn.RawType ?? "(null)");
+
+        // 特殊兼容:Byte 和 Int16 在 VastBase 中都映射到 smallint
+        // 实体可能是 Byte,数据库反向工程返回 Int16,只要 RawType 都是 smallint 就视为兼容
+        if ((entityColumn.DataType == typeof(Byte) && dbColumn.DataType == typeof(Int16)) ||
+            (entityColumn.DataType == typeof(Int16) && dbColumn.DataType == typeof(Byte)))
+        {
+            var entityRaw = entityColumn.RawType?.ToLower();
+            var dbRaw = dbColumn.RawType?.ToLower();
+            
+            // 如果都是 smallint 或 int2,则视为兼容
+            if ((entityRaw == "smallint" || entityRaw == "int2") &&
+                (dbRaw == "smallint" || dbRaw == "int2"))
+            {
+                WriteLog("  → Byte/Int16 兼容: 实体={0}, 数据库={1}, 都使用smallint, 视为类型未改变✓",
+                    entityColumn.DataType?.Name ?? "(null)",
+                    dbColumn.DataType?.Name ?? "(null)");
+                return false;
+            }
+        }
 
         // 如果实体字段的 DataType 为 null,尝试从 RawType 反推
         // (ModelHelper.FixDefaultByType 会将 DataType 设为 null,以便写入 XML 时不重复)
