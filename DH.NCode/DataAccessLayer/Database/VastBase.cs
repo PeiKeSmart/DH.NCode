@@ -519,7 +519,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
         { typeof(Int64), new String[] { "bigint" } },
         { typeof(Single), new String[] { "float" } },
         { typeof(Double), new String[] { "float8", "double precision" } },
-        { typeof(Decimal), new String[] { "decimal" } },
+        { typeof(Decimal), new String[] { "numeric", "decimal" } },
         { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date", "time" } },
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
