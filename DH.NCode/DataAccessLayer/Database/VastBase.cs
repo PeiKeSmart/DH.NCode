@@ -650,6 +650,27 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
+        // 如果实体字段的 DataType 为 null,尝试从 RawType 反推
+        // (ModelHelper.FixDefaultByType 会将 DataType 设为 null,以便写入 XML 时不重复)
+        if (entityColumn.DataType == null && !String.IsNullOrEmpty(entityColumn.RawType))
+        {
+            // 临时设置 DataType 用于比较
+            var tempField = entityColumn.Table?.CreateColumn();
+            if (tempField != null)
+            {
+                tempField.RawType = entityColumn.RawType;
+                var dataType = GetDataType(tempField);
+                if (dataType != null)
+                {
+                    tempField.DataType = dataType;
+                    
+                    // 使用推断出的 DataType 进行比较
+                    if (tempField.DataType == dbColumn.DataType)
+                        return false;
+                }
+            }
+        }
+
         // 标准化 RawType:将 MySQL 的 tinyint/int1 转换为 VastBase 的标准类型
         var entityRawType = NormalizeRawType(entityColumn.RawType, entityColumn.DataType);
         var dbRawType = NormalizeRawType(dbColumn.RawType, dbColumn.DataType);
