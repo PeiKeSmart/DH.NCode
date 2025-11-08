@@ -513,13 +513,13 @@ internal class VastBaseMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), new String[] { "bytea" } },
-        { typeof(Byte), new String[] { "smallint" } },
-        { typeof(Boolean), new String[] { "boolean" } },
-        { typeof(Int16), new String[] { "smallint" } },
-        { typeof(Int32), new String[] { "integer" } },
-        { typeof(Int64), new String[] { "bigint" } },
-        { typeof(Single), new String[] { "float" } },
-        { typeof(Double), new String[] { "float8", "double precision" } },
+        { typeof(Byte), new String[] { "smallint", "int2" } },
+        { typeof(Boolean), new String[] { "boolean", "bool" } },
+        { typeof(Int16), new String[] { "smallint", "int2" } },
+        { typeof(Int32), new String[] { "integer", "int", "int4" } },
+        { typeof(Int64), new String[] { "bigint", "int8" } },
+        { typeof(Single), new String[] { "real", "float4" } },
+        { typeof(Double), new String[] { "double precision", "float8" } },
         { typeof(Decimal), new String[] { "numeric", "decimal" } },
         { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date", "time" } },
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
@@ -594,6 +594,20 @@ internal class VastBaseMetaData : RemoteDbMetaData
             if (field.DataType == typeof(Int32)) return "serial";
             if (field.DataType == typeof(Int64)) return "bigserial";
         }
+        
+        // VastBase/PostgreSQL 不支持 tinyint 或 int1,需要转换
+        // 当 RawType 是 tinyint 或 int1 时,根据 DataType 选择合适的类型
+        if (!field.RawType.IsNullOrEmpty())
+        {
+            var rawType = field.RawType.ToLower();
+            if (rawType.StartsWith("tinyint") || rawType.StartsWith("int1"))
+            {
+                // Boolean 使用 boolean,Byte 使用 smallint
+                if (field.DataType == typeof(Boolean)) return "boolean";
+                if (field.DataType == typeof(Byte)) return "smallint";
+            }
+        }
+        
         return base.GetFieldType(field);
     }
 
