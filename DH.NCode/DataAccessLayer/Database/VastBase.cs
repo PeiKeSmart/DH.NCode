@@ -707,9 +707,20 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var dbRawType = NormalizeRawType(dbColumn.RawType, dbType);
 
         // 如果标准化后的 RawType 相同,则认为类型未改变
-        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType) &&
-            entityRawType.EqualIgnoreCase(dbRawType))
-            return false;
+        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
+        {
+            if (entityRawType.EqualIgnoreCase(dbRawType))
+                return false;
+
+            // 处理 PostgreSQL/VastBase 类型别名兼容(忽略长度)
+            var entityBaseType = entityRawType.Split('(')[0].Trim();
+            var dbBaseType = dbRawType.Split('(')[0].Trim();
+
+            // varchar ↔ character varying
+            if ((entityBaseType.EqualIgnoreCase("varchar") && dbBaseType.EqualIgnoreCase("character varying")) ||
+                (entityBaseType.EqualIgnoreCase("character varying") && dbBaseType.EqualIgnoreCase("varchar")))
+                return false;
+        }
 
         return base.IsColumnTypeChanged(entityColumn, dbColumn);
     }
