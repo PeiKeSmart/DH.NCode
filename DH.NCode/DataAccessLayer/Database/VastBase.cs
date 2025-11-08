@@ -668,80 +668,50 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
-        // 日志:显示比较的详细信息
-        WriteLog("IsColumnTypeChanged: 字段[{0}] 实体DataType={1}, 实体RawType={2}, 数据库DataType={3}, 数据库RawType={4}",
-            entityColumn.Name,
-            entityColumn.DataType?.Name ?? "(null)",
-            entityColumn.RawType ?? "(null)",
-            dbColumn.DataType?.Name ?? "(null)",
-            dbColumn.RawType ?? "(null)");
-
         // 特殊兼容:Byte 和 Int16 在 VastBase 中都映射到 smallint
         // 实体可能是 Byte,数据库反向工程返回 Int16,只要 RawType 都是 smallint 就视为兼容
-        if ((entityColumn.DataType == typeof(Byte) && dbColumn.DataType == typeof(Int16)) ||
-            (entityColumn.DataType == typeof(Int16) && dbColumn.DataType == typeof(Byte)))
+        var entityType = entityColumn.DataType;
+        var dbType = dbColumn.DataType;
+        
+        if ((entityType == typeof(Byte) && dbType == typeof(Int16)) ||
+            (entityType == typeof(Int16) && dbType == typeof(Byte)))
         {
-            var entityRaw = entityColumn.RawType?.ToLower();
-            var dbRaw = dbColumn.RawType?.ToLower();
+            var entityRaw = entityColumn.RawType;
+            var dbRaw = dbColumn.RawType;
             
-            // 如果都是 smallint 或 int2,则视为兼容
-            if ((entityRaw == "smallint" || entityRaw == "int2") &&
-                (dbRaw == "smallint" || dbRaw == "int2"))
+            // 如果都是 smallint 或 int2,则视为兼容（不区分大小写）
+            if (!String.IsNullOrEmpty(entityRaw) && !String.IsNullOrEmpty(dbRaw))
             {
-                WriteLog("  → Byte/Int16 兼容: 实体={0}, 数据库={1}, 都使用smallint, 视为类型未改变✓",
-                    entityColumn.DataType?.Name ?? "(null)",
-                    dbColumn.DataType?.Name ?? "(null)");
-                return false;
+                if ((entityRaw.EqualIgnoreCase("smallint") || entityRaw.EqualIgnoreCase("int2")) &&
+                    (dbRaw.EqualIgnoreCase("smallint") || dbRaw.EqualIgnoreCase("int2")))
+                    return false;
             }
         }
 
         // 如果实体字段的 DataType 为 null,尝试从 RawType 反推
         // (ModelHelper.FixDefaultByType 会将 DataType 设为 null,以便写入 XML 时不重复)
-        if (entityColumn.DataType == null && !String.IsNullOrEmpty(entityColumn.RawType))
+        if (entityType == null && !String.IsNullOrEmpty(entityColumn.RawType))
         {
-            // 临时设置 DataType 用于比较
             var tempField = entityColumn.Table?.CreateColumn();
             if (tempField != null)
             {
                 tempField.RawType = entityColumn.RawType;
                 var dataType = GetDataType(tempField);
-                if (dataType != null)
-                {
-                    tempField.DataType = dataType;
-                    
-                    WriteLog("  → 从实体RawType[{0}]推断出DataType={1}, 与数据库DataType={2} {3}",
-                        entityColumn.RawType,
-                        tempField.DataType.Name,
-                        dbColumn.DataType?.Name ?? "(null)",
-                        tempField.DataType == dbColumn.DataType ? "匹配✓" : "不匹配✗");
-                    
-                    // 使用推断出的 DataType 进行比较
-                    if (tempField.DataType == dbColumn.DataType)
-                        return false;
-                }
+                if (dataType != null && dataType == dbType)
+                    return false;
             }
         }
 
         // 标准化 RawType:将 MySQL 的 tinyint/int1 转换为 VastBase 的标准类型
-        var entityRawType = NormalizeRawType(entityColumn.RawType, entityColumn.DataType);
-        var dbRawType = NormalizeRawType(dbColumn.RawType, dbColumn.DataType);
-
-        WriteLog("  → 标准化后: 实体RawType={0}, 数据库RawType={1} {2}",
-            entityRawType ?? "(null)",
-            dbRawType ?? "(null)",
-            (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType) && entityRawType.EqualIgnoreCase(dbRawType)) ? "匹配✓" : "继续基类比较");
+        var entityRawType = NormalizeRawType(entityColumn.RawType, entityType);
+        var dbRawType = NormalizeRawType(dbColumn.RawType, dbType);
 
         // 如果标准化后的 RawType 相同,则认为类型未改变
-        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
-        {
-            if (entityRawType.EqualIgnoreCase(dbRawType))
-                return false;
-        }
+        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType) &&
+            entityRawType.EqualIgnoreCase(dbRawType))
+            return false;
 
-        var baseResult = base.IsColumnTypeChanged(entityColumn, dbColumn);
-        WriteLog("  → 基类比较结果: {0}", baseResult ? "类型已改变" : "类型未改变");
-        
-        return baseResult;
+        return base.IsColumnTypeChanged(entityColumn, dbColumn);
     }
 
     /// <summary>标准化 RawType,将不支持的类型转换为 VastBase 支持的类型</summary>
@@ -749,9 +719,9 @@ internal class VastBaseMetaData : RemoteDbMetaData
     {
         if (String.IsNullOrEmpty(rawType)) return rawType;
 
-        var rt = rawType.ToLower();
-        // tinyint(1) 或 int1 转换
-        if (rt.StartsWith("tinyint") || rt.StartsWith("int1"))
+        // 优化:避免重复 ToLower,使用 OrdinalIgnoreCase 比较
+        if (rawType.StartsWith("tinyint", StringComparison.OrdinalIgnoreCase) || 
+            rawType.StartsWith("int1", StringComparison.OrdinalIgnoreCase))
         {
             if (dataType == typeof(Boolean)) return "boolean";
             if (dataType == typeof(Byte)) return "smallint";
@@ -761,28 +731,10 @@ internal class VastBaseMetaData : RemoteDbMetaData
     }
 
     protected override Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
-    {
-        var result = base.IsColumnLengthChanged(entityColumn, dbColumn, entityDb);
-        if (result)
-        {
-            WriteLog("IsColumnLengthChanged: 字段[{0}] 实体长度={1}, 数据库长度={2} → 长度已改变",
-                entityColumn.Name, entityColumn.Length, dbColumn.Length);
-        }
-        return result;
-    }
+        => base.IsColumnLengthChanged(entityColumn, dbColumn, entityDb);
 
     protected override Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
-    {
-        var result = base.IsColumnChanged(entityColumn, dbColumn, entityDb);
-        if (result)
-        {
-            WriteLog("IsColumnChanged: 字段[{0}] 实体={1}/{2}, 数据库={3}/{4} → 字段已改变",
-                entityColumn.Name,
-                entityColumn.DataType?.Name ?? "(null)", entityColumn.RawType ?? "(null)",
-                dbColumn.DataType?.Name ?? "(null)", dbColumn.RawType ?? "(null)");
-        }
-        return result;
-    }
+        => base.IsColumnChanged(entityColumn, dbColumn, entityDb);
 
     #region 架构定义
 
@@ -854,33 +806,12 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var parts = fieldDef.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
         var typeAndConstraints = parts.Length > 1 ? parts[1] : fieldDef;
         
-        var sql = $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
-        
-        // 记录详细信息
-        WriteLog("AddColumnSQL 被调用: 字段[{0}] DataType={1}, RawType={2}, Nullable={3}, 生成SQL={4}",
-            field.Name,
-            field.DataType?.Name ?? "(null)",
-            field.RawType ?? "(null)",
-            field.Nullable,
-            sql);
-        
-        return sql;
+        return $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
     }
 
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
-        var sql = $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
-        
-        // 记录详细信息,帮助调试
-        WriteLog("AlterColumnSQL 被调用: 字段[{0}] 实体DataType={1}, 实体RawType={2}, 数据库DataType={3}, 数据库RawType={4}, 生成SQL={5}",
-            field.Name,
-            field.DataType?.Name ?? "(null)",
-            field.RawType ?? "(null)",
-            oldfield?.DataType?.Name ?? "(null)",
-            oldfield?.RawType ?? "(null)",
-            sql);
-        
-        return sql;
+        return $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
     }
 
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
