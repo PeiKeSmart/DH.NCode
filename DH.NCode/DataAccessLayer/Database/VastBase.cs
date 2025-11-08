@@ -609,7 +609,8 @@ internal class VastBaseMetaData : RemoteDbMetaData
     protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         String? str = null;
-        if (!field.Nullable) str = " NOT NULL";
+        // serial 类型已隐含 NOT NULL,不需要再添加
+        if (!field.Nullable && !field.Identity) str = " NOT NULL";
 
         // 默认值
         if (!field.Nullable && !field.Identity)
@@ -694,7 +695,16 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     public override String DropTableDescriptionSQL(IDataTable table) => $"Comment On Table {FormatName(table)} is ''";
 
-    public override String? AddColumnSQL(IDataColumn field) => $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {GetFieldType(field)}";
+    public override String? AddColumnSQL(IDataColumn field)
+    {
+        // 使用 FieldClause 获取完整的字段定义(包含类型和约束)
+        var fieldDef = FieldClause(field, true);
+        // 从字段定义中移除字段名(FieldClause 返回格式: "字段名 类型 约束")
+        var parts = fieldDef.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+        var typeAndConstraints = parts.Length > 1 ? parts[1] : fieldDef;
+        
+        return $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
+    }
 
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
 
