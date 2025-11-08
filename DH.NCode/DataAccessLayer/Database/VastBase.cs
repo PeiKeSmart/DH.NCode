@@ -723,6 +723,30 @@ internal class VastBaseMetaData : RemoteDbMetaData
         return rawType;
     }
 
+    protected override Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
+    {
+        var result = base.IsColumnLengthChanged(entityColumn, dbColumn, entityDb);
+        if (result)
+        {
+            WriteLog("IsColumnLengthChanged: 字段[{0}] 实体长度={1}, 数据库长度={2} → 长度已改变",
+                entityColumn.Name, entityColumn.Length, dbColumn.Length);
+        }
+        return result;
+    }
+
+    protected override Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
+    {
+        var result = base.IsColumnChanged(entityColumn, dbColumn, entityDb);
+        if (result)
+        {
+            WriteLog("IsColumnChanged: 字段[{0}] 实体={1}/{2}, 数据库={3}/{4} → 字段已改变",
+                entityColumn.Name,
+                entityColumn.DataType?.Name ?? "(null)", entityColumn.RawType ?? "(null)",
+                dbColumn.DataType?.Name ?? "(null)", dbColumn.RawType ?? "(null)");
+        }
+        return result;
+    }
+
     #region 架构定义
 
     //public override object SetSchema(DDLSchema schema, params object[] values)
@@ -793,10 +817,34 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var parts = fieldDef.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
         var typeAndConstraints = parts.Length > 1 ? parts[1] : fieldDef;
         
-        return $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
+        var sql = $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
+        
+        // 记录详细信息
+        WriteLog("AddColumnSQL 被调用: 字段[{0}] DataType={1}, RawType={2}, Nullable={3}, 生成SQL={4}",
+            field.Name,
+            field.DataType?.Name ?? "(null)",
+            field.RawType ?? "(null)",
+            field.Nullable,
+            sql);
+        
+        return sql;
     }
 
-    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
+    {
+        var sql = $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
+        
+        // 记录详细信息,帮助调试
+        WriteLog("AlterColumnSQL 被调用: 字段[{0}] 实体DataType={1}, 实体RawType={2}, 数据库DataType={3}, 数据库RawType={4}, 生成SQL={5}",
+            field.Name,
+            field.DataType?.Name ?? "(null)",
+            field.RawType ?? "(null)",
+            oldfield?.DataType?.Name ?? "(null)",
+            oldfield?.RawType ?? "(null)",
+            sql);
+        
+        return sql;
+    }
 
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
