@@ -513,7 +513,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), new String[] { "bytea" } },
-        { typeof(Byte), new String[] { "tinyint", "int1" } },
+        { typeof(Byte), new String[] { "smallint" } },
         { typeof(Boolean), new String[] { "boolean" } },
         { typeof(Int16), new String[] { "smallint" } },
         { typeof(Int32), new String[] { "integer" } },
