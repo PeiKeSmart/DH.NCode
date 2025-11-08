@@ -585,17 +585,19 @@ internal class VastBaseMetaData : RemoteDbMetaData
         base.FixField(field, dr);
     }
 
-    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldType(IDataColumn field)
     {
         if (field.Identity)
         {
-            if (field.DataType == typeof(Int64))
-            {
-                return $"{FormatName(field)} serial8 NOT NULL";
-            }
-            return $"{FormatName(field)} serial NOT NULL";
+            if (field.DataType == typeof(Int16)) return "smallserial";
+            if (field.DataType == typeof(Int32)) return "serial";
+            if (field.DataType == typeof(Int64)) return "bigserial";
         }
+        return base.GetFieldType(field);
+    }
 
+    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
+    {
         var sql = base.FieldClause(field, onlyDefine);
 
         //// 加上注释
@@ -608,8 +610,6 @@ internal class VastBaseMetaData : RemoteDbMetaData
     {
         String? str = null;
         if (!field.Nullable) str = " NOT NULL";
-
-        if (field.Identity) str = " serial NOT NULL";
 
         // 默认值
         if (!field.Nullable && !field.Identity)
