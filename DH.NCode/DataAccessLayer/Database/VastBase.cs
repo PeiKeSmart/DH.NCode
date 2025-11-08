@@ -694,6 +694,10 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     public override String DropTableDescriptionSQL(IDataTable table) => $"Comment On Table {FormatName(table)} is ''";
 
+    public override String? AddColumnSQL(IDataColumn field) => $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {GetFieldType(field)}";
+
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
+
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
