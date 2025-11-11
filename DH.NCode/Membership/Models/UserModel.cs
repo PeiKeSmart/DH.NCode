@@ -59,6 +59,9 @@ public partial class UserModel : IModel
     /// <summary>部门。组织机构</summary>
     public Int32 DepartmentID { get; set; }
 
+    /// <summary>岗位。组织机构</summary>
+    public Int32 PositionID { get; set; }
+
     /// <summary>在线</summary>
     public Boolean Online { get; set; }
 
@@ -136,6 +139,7 @@ public partial class UserModel : IModel
                 "RoleID" => RoleID,
                 "RoleIds" => RoleIds,
                 "DepartmentID" => DepartmentID,
+                "PositionID" => PositionID,
                 "Online" => Online,
                 "Enable" => Enable,
                 "Age" => Age,
@@ -175,6 +179,7 @@ public partial class UserModel : IModel
                 case "RoleID": RoleID = value.ToInt(); break;
                 case "RoleIds": RoleIds = Convert.ToString(value); break;
                 case "DepartmentID": DepartmentID = value.ToInt(); break;
+                case "PositionID": PositionID = value.ToInt(); break;
                 case "Online": Online = value.ToBoolean(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "Age": Age = value.ToInt(); break;
@@ -218,6 +223,7 @@ public partial class UserModel : IModel
         RoleID = model.RoleID;
         RoleIds = model.RoleIds;
         DepartmentID = model.DepartmentID;
+        PositionID = model.PositionID;
         Online = model.Online;
         Enable = model.Enable;
         Age = model.Age;

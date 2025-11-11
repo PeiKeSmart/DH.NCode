@@ -63,7 +63,7 @@ public partial interface IDepartment
     String? Ex6 { get; set; }
 
     /// <summary>所属公司</summary>
-    String? CompanyId { get; set; }
+    Int32 CompanyId { get; set; }
 
     /// <summary>创建者</summary>
     String? CreateUser { get; set; }

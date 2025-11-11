@@ -66,7 +66,7 @@ public partial class DepartmentModel : IModel
     public String? Ex6 { get; set; }
 
     /// <summary>所属公司</summary>
-    public String? CompanyId { get; set; }
+    public Int32 CompanyId { get; set; }
 
     /// <summary>创建者</summary>
     public String? CreateUser { get; set; }
@@ -157,7 +157,7 @@ public partial class DepartmentModel : IModel
                 case "Ex4": Ex4 = Convert.ToString(value); break;
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
-                case "CompanyId": CompanyId = Convert.ToString(value); break;
+                case "CompanyId": CompanyId = value.ToInt(); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": CreateUserID = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;

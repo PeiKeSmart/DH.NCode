@@ -56,6 +56,9 @@ public partial interface IUser
     /// <summary>部门。组织机构</summary>
     Int32 DepartmentID { get; set; }
 
+    /// <summary>岗位。组织机构</summary>
+    Int32 PositionID { get; set; }
+
     /// <summary>在线</summary>
     Boolean Online { get; set; }
 

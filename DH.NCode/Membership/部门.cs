@@ -169,13 +169,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [BindColumn("Ex6", "扩展6", "")]
     public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
-    private String? _CompanyId;
+    private Int32 _CompanyId;
     /// <summary>所属公司</summary>
     [DisplayName("所属公司")]
     [Description("所属公司")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 0)]
     [BindColumn("CompanyId", "所属公司", "")]
-    public String? CompanyId { get => _CompanyId; set { if (OnPropertyChanging("CompanyId", value)) { _CompanyId = value; OnPropertyChanged("CompanyId"); } } }
+    public Int32 CompanyId { get => _CompanyId; set { if (OnPropertyChanging("CompanyId", value)) { _CompanyId = value; OnPropertyChanged("CompanyId"); } } }
 
     private String? _CreateUser;
     /// <summary>创建者</summary>
@@ -352,7 +352,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Ex4": _Ex4 = Convert.ToString(value); break;
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CompanyId": _CompanyId = Convert.ToString(value); break;
+                case "CompanyId": _CompanyId = value.ToInt(); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -465,12 +465,12 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>根据所属公司查找</summary>
     /// <param name="companyId">所属公司</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByCompanyId(String? companyId)
+    public static IList<Department> FindAllByCompanyId(Int32 companyId)
     {
-        if (companyId == null) return [];
+        if (companyId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CompanyId.EqualIgnoreCase(companyId));
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CompanyId == companyId);
 
         return FindAll(_.CompanyId == companyId);
     }
@@ -489,13 +489,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, Int32 parentId, String? companyId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Int32 companyId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (parentId >= 0) exp &= _.ParentID == parentId;
-        if (!companyId.IsNullOrEmpty()) exp &= _.CompanyId == companyId;
+        if (companyId >= 0) exp &= _.CompanyId == companyId;
         if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
