@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <VersionPrefix>1.0</VersionPrefix>
+    <VersionPrefix>4.16</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -35,8 +35,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DH.NRedis" Version="4.14.2025.1025-beta0126" />
-    <PackageReference Include="DH.NRemoting" Version="4.15.2025.1024-beta1315" />
-    <PackageReference Include="DH.NStardust" Version="4.15.2025.1024-beta1328" />
+    <PackageReference Include="DH.NRemoting" Version="4.15.2025.1106-beta0416" />
+    <PackageReference Include="DH.NStardust" Version="4.15.2025.1106-beta0743" />
     <PackageReference Include="MySql.Data" Version="9.5.0" />
     <PackageReference Include="Net.IBM.Data.Db2" Version="9.0.0.400" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
