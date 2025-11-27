@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
-
+using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 using NewLife.Log;
@@ -18,19 +18,15 @@ public partial class Department : Entity<Department>, ITenantSource
         //// 用于引发基类的静态构造函数，所有层次的泛型实体类都应该有一个
         //var entity = new Department();
 
-        // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
+        // 累加字段
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(TenantId));
+        //df.Add(__.ParentID);
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        Meta.Modules.Add<IPModule>();
         Meta.Modules.Add<TenantModule>();
-
-        // 实体缓存
-        // var ec = Meta.Cache;
-        // ec.Expire = 60;
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -98,22 +94,6 @@ public partial class Department : Entity<Department>, ITenantSource
     #endregion
 
     #region 扩展属性
-    ///// <summary>租户</summary>
-    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    //public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
-
-    ///// <summary>租户</summary>
-    //[Map(nameof(TenantId), typeof(Tenant), "Id")]
-    //public String TenantName => Tenant?.Name;
-
-    ///// <summary>管理者</summary>
-    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    //public User Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
-
-    ///// <summary>管理者</summary>
-    //[Map(__.ManagerId, typeof(User), __.ID)]
-    //public String ManagerName => Manager?.ToString();
-
     /// <summary>父级</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Department? Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
@@ -123,7 +103,7 @@ public partial class Department : Entity<Department>, ITenantSource
     public String? ParentName => Parent?.ToString();
 
     /// <summary>父级路径</summary>
-    public String ParentPath
+    public String? ParentPath
     {
         get
         {
@@ -156,17 +136,15 @@ public partial class Department : Entity<Department>, ITenantSource
         }
     }
 
-    /// <summary>
-    /// 获取子集合
-    /// </summary>
+    /// <summary>下级部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IEnumerable<Department>? ChildList => Extends.Get(nameof(ChildList), k => FindAllByParentId(ID).OrderBy(e => e.ID));
+    public IEnumerable<Department>? Childs => Extends.Get(nameof(Childs), k => FindAllByTenantIdAndParentId(TenantId, ID).OrderBy(e => e.ID));
 
-    /// <summary>
-    ///是否存在子集
-    /// </summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Boolean subset { get; set; }
+    ///// <summary>
+    /////是否存在子集
+    ///// </summary>
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    //public Boolean subset { get; set; }
     #endregion
 
     #region 扩展查询
@@ -174,7 +152,7 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
     /// <returns>实体对象</returns>
-    public static Department? FindByNameAndParentID(String name, Int32 parentid)
+    public static Department FindByNameAndParentID(String name, Int32 parentid)
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);
@@ -185,7 +163,7 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <summary>根据代码查找</summary>
     /// <param name="code">代码</param>
     /// <returns>实体对象</returns>
-    public static Department? FindByCode(String code)
+    public static Department FindByCode(String code)
     {
         if (code.IsNullOrEmpty()) return null;
 
@@ -200,7 +178,7 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <returns>实体列表</returns>
     public static IList<Department> FindAllByTenantId(Int32 tenantId)
     {
-        if (tenantId <= 0) return [];
+        if (tenantId <= 0) return new List<Department>();
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
@@ -217,6 +195,38 @@ public partial class Department : Entity<Department>, ITenantSource
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
 
         return FindAll(_.ParentID == parentID);
+    }
+
+    /// <summary>根据租户、父级、名称查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="parentId">父级</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体对象</returns>
+    public static Department? FindByTenantIdAndParentIdAndName(Int32 tenantId, Int32 parentId, String name)
+    {
+        if (tenantId < 0) return null;
+        if (parentId < 0) return null;
+        if (name.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+        return Find(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
+    }
+
+    /// <summary>根据租户、父级查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="parentId">父级</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByTenantIdAndParentId(Int32 tenantId, Int32 parentId)
+    {
+        if (tenantId < 0) return [];
+        if (parentId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
+
+        return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
     }
     #endregion
 
@@ -241,17 +251,5 @@ public partial class Department : Entity<Department>, ITenantSource
     #endregion
 
     #region 业务操作
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    public IDepartment ToModel()
-    {
-        var model = new Department();
-        model.Copy(this);
-
-        return model;
-    }
-
     #endregion
 }
