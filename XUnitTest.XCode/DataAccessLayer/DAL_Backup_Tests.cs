@@ -7,7 +7,7 @@ using Xunit;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 [Collection("Database")]
-[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class DAL_Backup_Tests
 {
     [Fact]

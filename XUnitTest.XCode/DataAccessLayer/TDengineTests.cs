@@ -15,7 +15,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("DH.UnitTest.PriorityOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class TDengineTests
 {
     private static String _ConnStr = "Server=gz01.newlifex.com;Port=6030;Database=db;user=root;password=taosdata";

@@ -11,7 +11,7 @@ using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-[TestCaseOrderer("DH.UnitTest.DefaultOrderer", "DH.UnitTest")]
+[TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class DaMengTests
 {
     private static String _ConnStr = "Server=.;Port=5236;owner=dameng;user=SYSDBA;password=SYSDBA";

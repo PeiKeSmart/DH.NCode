@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
-
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
-
 using Xunit;
-
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;

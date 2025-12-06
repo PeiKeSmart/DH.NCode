@@ -1,512 +1,151 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
+using NewLife.Model;
+using NewLife.Reflection;
+using NewLife.Threading;
+using NewLife.Web;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Membership;
+using XCode.Shards;
 
 namespace XCode.Membership666;
 
-/// <summary>成员日志</summary>
-[Serializable]
-[DataObject]
-[Description("成员日志")]
-[BindIndex("IX_MemberLog_Action_Category_ID", false, "Action,Category,ID")]
-[BindIndex("IX_MemberLog_Category_LinkID_ID", false, "Category,LinkID,ID")]
-[BindIndex("IX_MemberLog_CreateUserID_ID", false, "CreateUserID,ID")]
-[BindTable("MemberLog", Description = "成员日志", ConnName = "Log", DbType = DatabaseType.None)]
-public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
+public partial class MemberLog : Entity<MemberLog>
 {
-    #region 属性
-    private Int64 _ID;
-    /// <summary>编号</summary>
-    [DisplayName("编号")]
-    [Description("编号")]
-    [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
-
-    private String? _Ds;
-    /// <summary>数据分区</summary>
-    [DisplayName("数据分区")]
-    [Description("数据分区")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Ds", "数据分区", "", DataScale = "time")]
-    public String? Ds { get => _Ds; set { if (OnPropertyChanging("Ds", value)) { _Ds = value; OnPropertyChanged("Ds"); } } }
-
-    private String? _Category;
-    /// <summary>类别</summary>
-    [DisplayName("类别")]
-    [Description("类别")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Category", "类别", "")]
-    public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
-
-    private String? _Action;
-    /// <summary>操作</summary>
-    [DisplayName("操作")]
-    [Description("操作")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Action", "操作", "")]
-    public String? Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
-
-    private Int32 _LinkID;
-    /// <summary>链接</summary>
-    [DisplayName("链接")]
-    [Description("链接")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("LinkID", "链接", "")]
-    public Int32 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
-
-    private Boolean _Success;
-    /// <summary>成功</summary>
-    [DisplayName("成功")]
-    [Description("成功")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Success", "成功", "")]
-    public Boolean Success { get => _Success; set { if (OnPropertyChanging("Success", value)) { _Success = value; OnPropertyChanged("Success"); } } }
-
-    private String? _UserName;
-    /// <summary>用户名</summary>
-    [DisplayName("用户名")]
-    [Description("用户名")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("UserName", "用户名", "")]
-    public String? UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
-
-    private Int32 _Ex1;
-    /// <summary>扩展1</summary>
-    [Category("扩展")]
-    [DisplayName("扩展1")]
-    [Description("扩展1")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Ex1", "扩展1", "")]
-    public Int32 Ex1 { get => _Ex1; set { if (OnPropertyChanging("Ex1", value)) { _Ex1 = value; OnPropertyChanged("Ex1"); } } }
-
-    private Int32 _Ex2;
-    /// <summary>扩展2</summary>
-    [Category("扩展")]
-    [DisplayName("扩展2")]
-    [Description("扩展2")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Ex2", "扩展2", "")]
-    public Int32 Ex2 { get => _Ex2; set { if (OnPropertyChanging("Ex2", value)) { _Ex2 = value; OnPropertyChanged("Ex2"); } } }
-
-    private Double _Ex3;
-    /// <summary>扩展3</summary>
-    [Category("扩展")]
-    [DisplayName("扩展3")]
-    [Description("扩展3")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("Ex3", "扩展3", "")]
-    public Double Ex3 { get => _Ex3; set { if (OnPropertyChanging("Ex3", value)) { _Ex3 = value; OnPropertyChanged("Ex3"); } } }
-
-    private String? _Ex4;
-    /// <summary>扩展4</summary>
-    [Category("扩展")]
-    [DisplayName("扩展4")]
-    [Description("扩展4")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Ex4", "扩展4", "")]
-    public String? Ex4 { get => _Ex4; set { if (OnPropertyChanging("Ex4", value)) { _Ex4 = value; OnPropertyChanged("Ex4"); } } }
-
-    private String? _Ex5;
-    /// <summary>扩展5</summary>
-    [Category("扩展")]
-    [DisplayName("扩展5")]
-    [Description("扩展5")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Ex5", "扩展5", "")]
-    public String? Ex5 { get => _Ex5; set { if (OnPropertyChanging("Ex5", value)) { _Ex5 = value; OnPropertyChanged("Ex5"); } } }
-
-    private String? _Ex6;
-    /// <summary>扩展6</summary>
-    [Category("扩展")]
-    [DisplayName("扩展6")]
-    [Description("扩展6")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Ex6", "扩展6", "")]
-    public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
-
-    private String? _TraceId;
-    /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
-    [DisplayName("性能追踪")]
-    [Description("性能追踪。用于APM性能追踪定位，还原该事件的调用链")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("TraceId", "性能追踪。用于APM性能追踪定位，还原该事件的调用链", "")]
-    public String? TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
-
-    private String? _CreateUser;
-    /// <summary>创建者</summary>
-    [Category("扩展")]
-    [DisplayName("创建者")]
-    [Description("创建者")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("CreateUser", "创建者", "")]
-    public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
-
-    private Int32 _CreateUserID;
-    /// <summary>创建用户</summary>
-    [Category("扩展")]
-    [DisplayName("创建用户")]
-    [Description("创建用户")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
-
-    private String? _CreateIP;
-    /// <summary>创建地址</summary>
-    [Category("扩展")]
-    [DisplayName("创建地址")]
-    [Description("创建地址")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("CreateIP", "创建地址", "")]
-    public String? CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
-
-    private DateTime _CreateTime;
-    /// <summary>时间</summary>
-    [DisplayName("时间")]
-    [Description("时间")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateTime", "时间", "")]
-    public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
-
-    private String? _Remark;
-    /// <summary>详细信息</summary>
-    [DisplayName("详细信息")]
-    [Description("详细信息")]
-    [DataObjectField(false, false, true, 2000)]
-    [BindColumn("Remark", "详细信息", "")]
-    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
-    #endregion
-
-    #region 拷贝
-    /// <summary>拷贝模型对象</summary>
-    /// <param name="model">模型</param>
-    public void Copy(IMemberLog model)
+    #region 对象操作
+    static MemberLog()
     {
-        ID = model.ID;
-        Ds = model.Ds;
-        Category = model.Category;
-        Action = model.Action;
-        LinkID = model.LinkID;
-        Success = model.Success;
-        UserName = model.UserName;
-        Ex1 = model.Ex1;
-        Ex2 = model.Ex2;
-        Ex3 = model.Ex3;
-        Ex4 = model.Ex4;
-        Ex5 = model.Ex5;
-        Ex6 = model.Ex6;
-        TraceId = model.TraceId;
-        CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
-        CreateIP = model.CreateIP;
-        CreateTime = model.CreateTime;
-        Remark = model.Remark;
+        // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
+        //var df = Meta.Factory.AdditionalFields;
+        //df.Add(nameof(LinkID));
+
+        // 过滤器 UserModule、TimeModule、IPModule
+        Meta.Modules.Add(new UserModule { AllowEmpty = false });
+        Meta.Modules.Add<TimeModule>();
+        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        Meta.Modules.Add<TraceModule>();
     }
-    #endregion
 
-    #region 获取/设置 字段值
-    /// <summary>获取/设置 字段值</summary>
-    /// <param name="name">字段名</param>
-    /// <returns></returns>
-    public override Object? this[String name]
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        get => name switch
+        //if (method == DataMethod.Delete) return true;
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
+
+        // 建议先调用基类方法，基类方法会做一些统一处理
+        if (!base.Valid(method)) return false;
+
+        // 在新插入数据或者修改了指定字段时进行修正
+
+        // 保留2位小数
+        //Ex3 = Math.Round(Ex3, 2);
+
+        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
+        /*var user = ManageProvider.User;
+        if (user != null)
         {
-            "ID" => _ID,
-            "Ds" => _Ds,
-            "Category" => _Category,
-            "Action" => _Action,
-            "LinkID" => _LinkID,
-            "Success" => _Success,
-            "UserName" => _UserName,
-            "Ex1" => _Ex1,
-            "Ex2" => _Ex2,
-            "Ex3" => _Ex3,
-            "Ex4" => _Ex4,
-            "Ex5" => _Ex5,
-            "Ex6" => _Ex6,
-            "TraceId" => _TraceId,
-            "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
-            "CreateIP" => _CreateIP,
-            "CreateTime" => _CreateTime,
-            "Remark" => _Remark,
-            _ => base[name]
-        };
-        set
-        {
-            switch (name)
-            {
-                case "ID": _ID = value.ToLong(); break;
-                case "Ds": _Ds = Convert.ToString(value); break;
-                case "Category": _Category = Convert.ToString(value); break;
-                case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToInt(); break;
-                case "Success": _Success = value.ToBoolean(); break;
-                case "UserName": _UserName = Convert.ToString(value); break;
-                case "Ex1": _Ex1 = value.ToInt(); break;
-                case "Ex2": _Ex2 = value.ToInt(); break;
-                case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "TraceId": _TraceId = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
-                default: base[name] = value; break;
-            }
-        }
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+        }*/
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+
+        return true;
     }
+
+    ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
+    //[EditorBrowsable(EditorBrowsableState.Never)]
+    //protected override void InitData()
+    //{
+    //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
+    //    if (Meta.Session.Count > 0) return;
+
+    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化MemberLog[成员日志]数据……");
+
+    //    var entity = new MemberLog();
+    //    entity.Ds = "abc";
+    //    entity.Category = "abc";
+    //    entity.Action = "abc";
+    //    entity.LinkID = 0;
+    //    entity.Success = true;
+    //    entity.UserName = "abc";
+    //    entity.Ex1 = 0;
+    //    entity.Ex2 = 0;
+    //    entity.Ex3 = 0.0;
+    //    entity.Ex4 = "abc";
+    //    entity.Ex5 = "abc";
+    //    entity.Ex6 = "abc";
+    //    entity.Insert();
+
+    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化MemberLog[成员日志]数据！");
+    //}
+
+    ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
+    ///// <returns></returns>
+    //public override Int32 Insert()
+    //{
+    //    return base.Insert();
+    //}
+
+    ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
+    ///// <returns></returns>
+    //protected override Int32 OnDelete()
+    //{
+    //    return base.OnDelete();
+    //}
     #endregion
 
-    #region 关联映射
-    /// <summary>创建用户</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindByID(CreateUserID));
-
-    /// <summary>创建用户</summary>
-    [Map(nameof(CreateUserID), typeof(User), "ID")]
-    [Category("扩展")]
-    public String? CreateUserName => MyCreateUser?.ToString();
-
-    #endregion
-
-    #region 扩展查询
-    /// <summary>根据编号查找</summary>
-    /// <param name="id">编号</param>
-    /// <returns>实体对象</returns>
-    public static MemberLog? FindByID(Int64 id)
-    {
-        if (id < 0) return null;
-
-        return Find(_.ID == id);
-    }
-
-    /// <summary>根据操作、类别查找</summary>
-    /// <param name="action">操作</param>
-    /// <param name="category">类别</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByActionAndCategory(String? action, String? category)
-    {
-        if (action == null) return [];
-        if (category == null) return [];
-
-        return FindAll(_.Action == action & _.Category == category);
-    }
-
-    /// <summary>根据类别、链接查找</summary>
-    /// <param name="category">类别</param>
-    /// <param name="linkId">链接</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByCategoryAndLinkID(String? category, Int32 linkId)
-    {
-        if (category == null) return [];
-        if (linkId < 0) return [];
-
-        return FindAll(_.Category == category & _.LinkID == linkId);
-    }
-
-    /// <summary>根据创建用户查找</summary>
-    /// <param name="createUserId">创建用户</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByCreateUserID(Int32 createUserId)
-    {
-        if (createUserId < 0) return [];
-
-        return FindAll(_.CreateUserID == createUserId);
-    }
-
-    /// <summary>根据数据分区查找</summary>
-    /// <param name="ds">数据分区</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByDs(String? ds)
-    {
-        if (ds == null) return [];
-
-        return FindAll(_.Ds == ds);
-    }
+    #region 扩展属性
     #endregion
 
     #region 高级查询
-    /// <summary>高级查询</summary>
-    /// <param name="category">类别</param>
-    /// <param name="action">操作</param>
-    /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="success">成功</param>
-    /// <param name="start">数据分区开始</param>
-    /// <param name="end">数据分区结束</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> Search(String? category, String? action, Int32 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+
+    // Select Count(ID) as ID,Action From MemberLog Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By ID Desc limit 20
+    static readonly FieldCache<MemberLog> _ActionCache = new(nameof(Action))
     {
-        var exp = new WhereExpression();
+        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    };
 
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        if (success != null) exp &= _.Success == success;
-        exp &= _.Ds.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+    /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
 
-        return FindAll(exp, page);
-    }
+    // Select Count(ID) as ID,Category From MemberLog Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+    static readonly FieldCache<MemberLog> _CategoryCache = new(nameof(Category))
+    {
+        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    };
+
+    /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
     #endregion
 
-    #region 数据清理
-    /// <summary>清理指定时间段内的数据</summary>
-    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
-    /// <param name="end">结束时间</param>
-    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
-    /// <returns>清理行数</returns>
-    public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)
+    #region 业务操作
+    public IMemberLog ToModel()
     {
-        if (start == end) return Delete(_.Ds == start, maximumRows);
+        var model = new MemberLog();
+        model.Copy(this);
 
-        var where = new WhereExpression();
-        if (start.Year > 2000) where &= _.Ds >= start;
-        if (end.Year > 2000) where &= _.Ds < end;
-        return Delete(where, maximumRows);
-    }
-    #endregion
-
-    #region 字段名
-    /// <summary>取得成员日志字段信息的快捷方式</summary>
-    public partial class _
-    {
-        /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
-
-        /// <summary>数据分区</summary>
-        public static readonly Field Ds = FindByName("Ds");
-
-        /// <summary>类别</summary>
-        public static readonly Field Category = FindByName("Category");
-
-        /// <summary>操作</summary>
-        public static readonly Field Action = FindByName("Action");
-
-        /// <summary>链接</summary>
-        public static readonly Field LinkID = FindByName("LinkID");
-
-        /// <summary>成功</summary>
-        public static readonly Field Success = FindByName("Success");
-
-        /// <summary>用户名</summary>
-        public static readonly Field UserName = FindByName("UserName");
-
-        /// <summary>扩展1</summary>
-        public static readonly Field Ex1 = FindByName("Ex1");
-
-        /// <summary>扩展2</summary>
-        public static readonly Field Ex2 = FindByName("Ex2");
-
-        /// <summary>扩展3</summary>
-        public static readonly Field Ex3 = FindByName("Ex3");
-
-        /// <summary>扩展4</summary>
-        public static readonly Field Ex4 = FindByName("Ex4");
-
-        /// <summary>扩展5</summary>
-        public static readonly Field Ex5 = FindByName("Ex5");
-
-        /// <summary>扩展6</summary>
-        public static readonly Field Ex6 = FindByName("Ex6");
-
-        /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
-        public static readonly Field TraceId = FindByName("TraceId");
-
-        /// <summary>创建者</summary>
-        public static readonly Field CreateUser = FindByName("CreateUser");
-
-        /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
-
-        /// <summary>创建地址</summary>
-        public static readonly Field CreateIP = FindByName("CreateIP");
-
-        /// <summary>时间</summary>
-        public static readonly Field CreateTime = FindByName("CreateTime");
-
-        /// <summary>详细信息</summary>
-        public static readonly Field Remark = FindByName("Remark");
-
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        return model;
     }
 
-    /// <summary>取得成员日志字段名称的快捷方式</summary>
-    public partial class __
-    {
-        /// <summary>编号</summary>
-        public const String ID = "ID";
-
-        /// <summary>数据分区</summary>
-        public const String Ds = "Ds";
-
-        /// <summary>类别</summary>
-        public const String Category = "Category";
-
-        /// <summary>操作</summary>
-        public const String Action = "Action";
-
-        /// <summary>链接</summary>
-        public const String LinkID = "LinkID";
-
-        /// <summary>成功</summary>
-        public const String Success = "Success";
-
-        /// <summary>用户名</summary>
-        public const String UserName = "UserName";
-
-        /// <summary>扩展1</summary>
-        public const String Ex1 = "Ex1";
-
-        /// <summary>扩展2</summary>
-        public const String Ex2 = "Ex2";
-
-        /// <summary>扩展3</summary>
-        public const String Ex3 = "Ex3";
-
-        /// <summary>扩展4</summary>
-        public const String Ex4 = "Ex4";
-
-        /// <summary>扩展5</summary>
-        public const String Ex5 = "Ex5";
-
-        /// <summary>扩展6</summary>
-        public const String Ex6 = "Ex6";
-
-        /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
-        public const String TraceId = "TraceId";
-
-        /// <summary>创建者</summary>
-        public const String CreateUser = "CreateUser";
-
-        /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
-
-        /// <summary>创建地址</summary>
-        public const String CreateIP = "CreateIP";
-
-        /// <summary>时间</summary>
-        public const String CreateTime = "CreateTime";
-
-        /// <summary>详细信息</summary>
-        public const String Remark = "Remark";
-    }
     #endregion
 }
