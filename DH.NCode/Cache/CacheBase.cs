@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
+
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
+
 using XCode.DataAccessLayer;
 
 namespace XCode.Cache;
@@ -15,6 +17,9 @@ public abstract class CacheBase<TEntity> : CacheBase where TEntity : Entity<TEnt
 
     /// <summary>表名</summary>
     public String TableName { get; set; } = null!;
+
+    /// <summary>当前实体类专用的惰性消费者。让缓存更新异步串行执行，避免并行阻塞数据库</summary>
+    protected LazyConsumer Consumer { get; } = new();
     #endregion
 
     /// <summary>调用委托方法前设置连接名和表名，调用后还原</summary>
