@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -30,7 +30,7 @@ public partial class Department : Entity<Department>
 {
     #region 对象操作
     // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存
-    private static Int32 MaxCacheCount = 1000;
+    private static Int32 MaxCacheCount = 10000;
 
     static Department()
     {

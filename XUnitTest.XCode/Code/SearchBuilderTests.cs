@@ -2,7 +2,6 @@
 using System.Linq;
 using XCode.Code;
 using XCode.DataAccessLayer;
-
 using Xunit;
 
 namespace XUnitTest.XCode.Code;
