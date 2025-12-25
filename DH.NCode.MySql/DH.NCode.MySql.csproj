@@ -42,9 +42,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-  <!-- 按需求禁用 MySqlConnector：原先会导致同时下载并优先尝试使用 MySqlConnector 工厂
-  <PackageReference Include="MySqlConnector" Version="2.4.0" />
-  -->
+    <PackageReference Include="MySql.Data" Version="9.5.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
