@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -25,6 +25,9 @@ public partial interface IParameter
 
     /// <summary>数值</summary>
     String? Value { get; set; }
+
+    /// <summary>只读标记。用于验证关键字处理</summary>
+    Boolean Readonly { get; set; }
 
     /// <summary>长数值</summary>
     String? LongValue { get; set; }

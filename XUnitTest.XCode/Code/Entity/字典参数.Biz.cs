@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -93,6 +93,7 @@ public partial class Parameter : Entity<Parameter>
     //    entity.Category = "abc";
     //    entity.Name = "abc";
     //    entity.Value = "abc";
+    //    entity.Readonly = true;
     //    entity.LongValue = "abc";
     //    entity.Kind = 0;
     //    entity.Enable = true;
