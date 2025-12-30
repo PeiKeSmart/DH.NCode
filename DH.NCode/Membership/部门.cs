@@ -395,7 +395,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -415,7 +415,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
@@ -428,7 +428,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }
@@ -443,7 +443,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.ParentID == parentId & _.Name == name);
     }
@@ -456,7 +456,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (code == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
 
         return FindAll(_.Code == code);
     }
