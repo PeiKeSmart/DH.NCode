@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 using NewLife.Log;
@@ -14,7 +13,7 @@ public partial class Department : Entity<Department>, ITenantSource
 {
     #region 对象操作
     // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走缓存，否则走数据库
-    private Int32 MaxCacheCount = 10000;
+    private const Int32 MaxCacheCount = 10000;
 
     static Department()
     {
@@ -155,10 +154,10 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
     /// <returns>实体对象</returns>
-    public static Department FindByNameAndParentID(String name, Int32 parentid)
+    public static Department? FindByNameAndParentID(String name, Int32 parentid)
     {
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);
 
         return Find(_.Name == name & _.ParentID == parentid);
     }
@@ -166,12 +165,12 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <summary>根据代码查找</summary>
     /// <param name="code">代码</param>
     /// <returns>实体对象</returns>
-    public static Department FindByCode(String code)
+    public static Department? FindByCode(String code)
     {
         if (code.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code == code);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Code == code);
 
         return Find(_.Code == code);
     }
@@ -181,10 +180,10 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <returns>实体列表</returns>
     public static IList<Department> FindAllByTenantId(Int32 tenantId)
     {
-        if (tenantId <= 0) return new List<Department>();
+        if (tenantId <= 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
 
         return FindAll(_.TenantId == tenantId);
     }
@@ -195,7 +194,7 @@ public partial class Department : Entity<Department>, ITenantSource
     public static IList<Department> FindAllByParentId(Int32 parentID)
     {
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentID);
 
         return FindAll(_.ParentID == parentID);
     }
@@ -212,7 +211,7 @@ public partial class Department : Entity<Department>, ITenantSource
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return Find(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
@@ -227,7 +226,7 @@ public partial class Department : Entity<Department>, ITenantSource
         if (parentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
     }
