@@ -13,6 +13,9 @@ namespace XCode.Membership;
 public partial class Department : Entity<Department>, ITenantSource
 {
     #region 对象操作
+    // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走缓存，否则走数据库
+    private Int32 MaxCacheCount = 10000;
+
     static Department()
     {
         //// 用于引发基类的静态构造函数，所有层次的泛型实体类都应该有一个
