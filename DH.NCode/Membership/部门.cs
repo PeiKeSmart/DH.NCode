@@ -22,7 +22,6 @@ namespace XCode.Membership;
 [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
-[BindIndex("IX_Department_CompanyId", false, "CompanyId")]
 [BindTable("Department", Description = "部门。组织机构，多级树状结构，支持多租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Department : IDepartment, IEntity<IDepartment>
 {
@@ -393,10 +392,10 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <returns>实体对象</returns>
     public static Department? FindByID(Int32 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < 10000) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -416,7 +415,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
@@ -429,7 +428,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }
@@ -444,7 +443,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.ParentID == parentId & _.Name == name);
     }
@@ -457,22 +456,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (code == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
 
         return FindAll(_.Code == code);
-    }
-
-    /// <summary>根据所属公司查找</summary>
-    /// <param name="companyId">所属公司</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByCompanyId(Int32 companyId)
-    {
-        if (companyId < 0) return [];
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CompanyId == companyId);
-
-        return FindAll(_.CompanyId == companyId);
     }
     #endregion
 
@@ -480,7 +466,6 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
-    /// <param name="companyId">所属公司</param>
     /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
     /// <param name="enable">启用</param>
@@ -489,13 +474,12 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Int32 companyId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (parentId >= 0) exp &= _.ParentID == parentId;
-        if (companyId >= 0) exp &= _.CompanyId == companyId;
         if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
