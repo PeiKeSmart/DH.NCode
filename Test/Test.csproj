@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <VersionPrefix>4.16</VersionPrefix>
+    <VersionPrefix>4.17</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -35,8 +35,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DH.NRedis" Version="4.16.2025.1229-beta0932" />
-    <PackageReference Include="DH.NRemoting" Version="4.16.2025.1226-beta1050" />
-    <PackageReference Include="DH.NStardust" Version="4.16.2025.1229-beta1000" />
+    <PackageReference Include="DH.NRemoting" Version="4.16.2025.1230-beta0221" />
+    <PackageReference Include="DH.NStardust" Version="4.16.2025.1230-beta0239" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
   </ItemGroup>
