@@ -20,6 +20,9 @@ public partial class DepartmentModel : IModel
     /// <summary>租户</summary>
     public Int32 TenantId { get; set; }
 
+    /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+    public XCode.Membership.DepartmentTypes Type { get; set; }
+
     /// <summary>代码</summary>
     public String? Code { get; set; }
 
@@ -65,9 +68,6 @@ public partial class DepartmentModel : IModel
     /// <summary>扩展6</summary>
     public String? Ex6 { get; set; }
 
-    /// <summary>所属公司</summary>
-    public Int32 CompanyId { get; set; }
-
     /// <summary>创建者</summary>
     public String? CreateUser { get; set; }
 
@@ -108,6 +108,7 @@ public partial class DepartmentModel : IModel
             {
                 "ID" => ID,
                 "TenantId" => TenantId,
+                "Type" => Type,
                 "Code" => Code,
                 "Name" => Name,
                 "FullName" => FullName,
@@ -123,7 +124,6 @@ public partial class DepartmentModel : IModel
                 "Ex4" => Ex4,
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
-                "CompanyId" => CompanyId,
                 "CreateUser" => CreateUser,
                 "CreateUserID" => CreateUserID,
                 "CreateIP" => CreateIP,
@@ -142,6 +142,7 @@ public partial class DepartmentModel : IModel
             {
                 case "ID": ID = value.ToInt(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
+                case "Type": Type = (XCode.Membership.DepartmentTypes)value; break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;
@@ -157,7 +158,6 @@ public partial class DepartmentModel : IModel
                 case "Ex4": Ex4 = Convert.ToString(value); break;
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
-                case "CompanyId": CompanyId = value.ToInt(); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": CreateUserID = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
@@ -180,6 +180,7 @@ public partial class DepartmentModel : IModel
     {
         ID = model.ID;
         TenantId = model.TenantId;
+        Type = model.Type;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;
@@ -195,7 +196,6 @@ public partial class DepartmentModel : IModel
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
-        CompanyId = model.CompanyId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;

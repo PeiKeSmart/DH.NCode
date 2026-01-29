@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using XCode.Membership;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using System.Collections.Generic;
+using XCode.Membership;
 using XCode.Membership;
 using static XCode.Membership.TenantUser;
 
@@ -56,12 +57,13 @@ public class TenantUser : EntityController<TenantUser>
     {
         var tenantId = p["tenantId"].ToInt(-1);
         var userId = p["userId"].ToInt(-1);
+        var departmentId = p["departmentId"].ToInt(-1);
         var roleId = p["roleId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return TenantUser.Search(tenantId, userId, roleId, enable, start, end, p["Q"], p);
+        return TenantUser.Search(tenantId, userId, departmentId, roleId, enable, start, end, p["Q"], p);
     }
 }

@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
-using XCode.Membership;
+﻿using Microsoft.AspNetCore.Mvc;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
+using System.Collections.Generic;
+using XCode.Membership;
 using XCode.Membership;
 using static XCode.Membership.Role;
 
@@ -55,12 +56,14 @@ public class Role : EntityController<Role>
     protected override IEnumerable<Role> Search(Pager p)
     {
         var tenantId = p["tenantId"].ToInt(-1);
+        var type = (XCode.Membership.RoleTypes)p["type"].ToInt(-1);
         var isSystem = p["isSystem"]?.ToBoolean();
+        var dataScope = (XCode.Membership.DataScopes)p["dataScope"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Role.Search(tenantId, isSystem, enable, start, end, p["Q"], p);
+        return Role.Search(tenantId, type, isSystem, dataScope, enable, start, end, p["Q"], p);
     }
 }

@@ -17,6 +17,9 @@ public partial interface IDepartment
     /// <summary>租户</summary>
     Int32 TenantId { get; set; }
 
+    /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+    XCode.Membership.DepartmentTypes Type { get; set; }
+
     /// <summary>代码</summary>
     String? Code { get; set; }
 
@@ -61,9 +64,6 @@ public partial interface IDepartment
 
     /// <summary>扩展6</summary>
     String? Ex6 { get; set; }
-
-    /// <summary>所属公司</summary>
-    Int32 CompanyId { get; set; }
 
     /// <summary>创建者</summary>
     String? CreateUser { get; set; }
