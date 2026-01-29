@@ -26,7 +26,6 @@ public class BuilderOption
     /// <summary>引用命名空间,逗号分隔,区分大小写</summary>
     [Description("引用命名空间")]
     public String? ExtendNameSpace { get; set; }
-
     /// <summary>输出目录</summary>
     [Description("输出目录")]
     public String? Output { get; set; } = @".\";
@@ -54,7 +53,7 @@ public class BuilderOption
 
     /// <summary>引用命名空间。区分大小写</summary>
     [XmlIgnore, IgnoreDataMember]
-    public ICollection<String> Usings { get; set; } = new List<String>();
+    public ICollection<String> Usings { get; set; } = [];
 
     ///// <summary>纯净类。去除属性上的Description等特性</summary>
     //[XmlIgnore, IgnoreDataMember]

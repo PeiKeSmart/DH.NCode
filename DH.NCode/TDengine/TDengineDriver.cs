@@ -33,9 +33,9 @@ namespace TDengineDriver
         TSDB_DATA_TYPE_TIMESTAMP = 9,// 8 bytes
         TSDB_DATA_TYPE_NCHAR = 10,   // unicode string
         TSDB_DATA_TYPE_UTINYINT = 11,// 1 byte
-        TSDB_DATA_TYPE_USMALLINT= 12,// 2 bytes
+        TSDB_DATA_TYPE_USMALLINT = 12,// 2 bytes
         TSDB_DATA_TYPE_UINT = 13,    // 4 bytes
-        TSDB_DATA_TYPE_UBIGINT= 14   // 8 bytes
+        TSDB_DATA_TYPE_UBIGINT = 14   // 8 bytes
     }
 
     enum TDengineInitOption
@@ -132,7 +132,7 @@ namespace TDengineDriver
         {
             const int fieldSize = 68;
 
-            List<TDengineMeta> metas = new List<TDengineMeta>();
+            List<TDengineMeta> metas = [];
             if (res == IntPtr.Zero)
             {
                 return metas;
