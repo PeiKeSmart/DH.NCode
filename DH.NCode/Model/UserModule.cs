@@ -1,6 +1,4 @@
-﻿using NewLife;
-
-using XCode.Membership;
+﻿using XCode.Membership;
 
 namespace XCode;
 

@@ -38,14 +38,14 @@ public partial class ExpressLogs : Entity<ExpressLogs>
         // 按年分表
         Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
         {
-                TablePolicy = "{0}_{1:yyyy}",
-                Step = TimeSpan.FromDays(365),
+            TablePolicy = "{0}_{1:yyyy}",
+            Step = TimeSpan.FromDays(365),
         };
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add(new UserModule { AllowEmpty = false });
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
 
         // 实体缓存
         // var ec = Meta.Cache;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -38,8 +38,8 @@ public partial class Area : Entity<Area>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(ParentID));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
+        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add<TimeInterceptor>();
 
         // 实体缓存
         // var ec = Meta.Cache;
