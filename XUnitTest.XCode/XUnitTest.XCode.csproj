@@ -84,8 +84,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.0" />
-    <PackageReference Include="DH.NIP" Version="4.17.2026.112-beta1141" />
-    <PackageReference Include="DH.UnitTest" Version="4.17.2026.112-beta1136" />
+    <PackageReference Include="DH.NIP" Version="4.17.2026.114-beta0405" />
+    <PackageReference Include="DH.UnitTest" Version="4.17.2026.129-beta0657" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.2" />
     <PackageReference Include="xunit" Version="2.9.3" />

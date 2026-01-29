@@ -34,9 +34,9 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="4.17.2026.106-beta1212" />
-    <PackageReference Include="DH.NRemoting" Version="4.17.2026.112-beta1212" />
-    <PackageReference Include="DH.NStardust" Version="4.17.2026.112-beta1228" />
+    <PackageReference Include="DH.NRedis" Version="4.17.2026.115-beta0813" />
+    <PackageReference Include="DH.NRemoting" Version="4.17.2026.122-beta0845" />
+    <PackageReference Include="DH.NStardust" Version="4.17.2026.123-beta0214" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
   </ItemGroup>
