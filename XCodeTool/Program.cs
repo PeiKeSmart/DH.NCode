@@ -143,14 +143,8 @@ class Program
             else
             {
                 // 没有版本号，说明是旧文件，需要升级
-                // 同时检查文件最后修改时间是否在2026年1月30日之前
-                var cutoffDate = new DateTime(2026, 1, 30);
-                var fileInfo = new FileInfo(modelFile);
-                if (fileInfo.LastWriteTime < cutoffDate)
-                {
-                    needUpgrade = true;
-                    XTrace.WriteLine("检测到旧版本模型文件(无版本号且修改时间早于2026-01-30)，自动启用中文文件名");
-                }
+                needUpgrade = true;
+                XTrace.WriteLine("检测到旧版本模型文件(无版本号)，自动启用中文文件名");
             }
 
             if (needUpgrade)
