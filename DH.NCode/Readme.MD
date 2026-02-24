@@ -178,9 +178,4 @@ void Test()
 >[ORM组件XCode（撬动千万级数据）](http://www.cnblogs.com/nnhy/archive/2010/09/15/1827477.html)  
 >[ORM组件XCode（动手）](http://www.cnblogs.com/nnhy/archive/2010/09/15/1826602.html)  
 
-
-
- 
-#### 新生命开发团队  
-网站：http://newlifex.com  
-QQ群：1600800  
+高性能 .NET 数据中间件，聚焦“添删改查 + 极致性能 + 海量数据”，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
