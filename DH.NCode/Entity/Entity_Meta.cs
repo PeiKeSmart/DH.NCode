@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using NewLife.Log;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -114,13 +113,13 @@ public partial class Entity<TEntity>
                 {
                     var currentConn = ConnName;
                     var currentTable = TableName;
-
+                    
                     // 如果连接名或表名变化，重置 Session
                     if (_Session != null && (_SessionConnName != currentConn || _SessionTableName != currentTable))
                     {
                         _Session = null;
                     }
-
+                    
                     // 延迟初始化或重新创建 Session
                     if (_Session == null)
                     {
@@ -128,7 +127,7 @@ public partial class Entity<TEntity>
                         _SessionConnName = currentConn;
                         _SessionTableName = currentTable;
                     }
-
+                    
                     return _Session;
                 }
             }

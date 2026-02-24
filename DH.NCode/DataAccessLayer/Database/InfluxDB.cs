@@ -1,10 +1,9 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using System.Text;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-
 using XCode.InfluxDB;
 
 namespace XCode.DataAccessLayer;

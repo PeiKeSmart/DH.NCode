@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using System.Net.Http;
 
@@ -59,7 +59,7 @@ public class InfluxDBCommand : DbCommand
 
         var baseUrl = conn.DataSource.TrimEnd('/');
         var url = $"{baseUrl}/api/v2/write?org={conn.Organization}&bucket={conn.Bucket}&precision=ns";
-
+        
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("Authorization", $"Token {conn.Token}");
         request.Content = new StringContent(CommandText, System.Text.Encoding.UTF8, "text/plain");

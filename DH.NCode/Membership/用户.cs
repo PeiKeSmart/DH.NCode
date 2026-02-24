@@ -151,15 +151,6 @@ public partial class User : IUser, IEntity<IUser>
     [BindColumn("DepartmentID", "部门。组织机构", "")]
     public Int32 DepartmentID { get => _DepartmentID; set { if (OnPropertyChanging("DepartmentID", value)) { _DepartmentID = value; OnPropertyChanged("DepartmentID"); } } }
 
-    private Int32 _PositionID;
-    /// <summary>岗位。组织机构</summary>
-    [Category("登录信息")]
-    [DisplayName("岗位")]
-    [Description("岗位。组织机构")]
-    [DataObjectField(false, false, false, 0)]
-    [BindColumn("PositionID", "岗位。组织机构", "")]
-    public Int32 PositionID { get => _PositionID; set { if (OnPropertyChanging("PositionID", value)) { _PositionID = value; OnPropertyChanged("PositionID"); } } }
-
     private Boolean _Online;
     /// <summary>在线</summary>
     [Category("登录信息")]
@@ -369,7 +360,6 @@ public partial class User : IUser, IEntity<IUser>
         RoleID = model.RoleID;
         RoleIds = model.RoleIds;
         DepartmentID = model.DepartmentID;
-        PositionID = model.PositionID;
         Online = model.Online;
         Enable = model.Enable;
         Age = model.Age;
@@ -413,7 +403,6 @@ public partial class User : IUser, IEntity<IUser>
             "RoleID" => _RoleID,
             "RoleIds" => _RoleIds,
             "DepartmentID" => _DepartmentID,
-            "PositionID" => _PositionID,
             "Online" => _Online,
             "Enable" => _Enable,
             "Age" => _Age,
@@ -456,7 +445,6 @@ public partial class User : IUser, IEntity<IUser>
                 case "RoleID": _RoleID = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
                 case "DepartmentID": _DepartmentID = value.ToInt(); break;
-                case "PositionID": _PositionID = value.ToInt(); break;
                 case "Online": _Online = value.ToBoolean(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Age": _Age = value.ToInt(); break;
@@ -650,9 +638,6 @@ public partial class User : IUser, IEntity<IUser>
         /// <summary>部门。组织机构</summary>
         public static readonly Field DepartmentID = FindByName("DepartmentID");
 
-        /// <summary>岗位。组织机构</summary>
-        public static readonly Field PositionID = FindByName("PositionID");
-
         /// <summary>在线</summary>
         public static readonly Field Online = FindByName("Online");
 
@@ -766,9 +751,6 @@ public partial class User : IUser, IEntity<IUser>
 
         /// <summary>部门。组织机构</summary>
         public const String DepartmentID = "DepartmentID";
-
-        /// <summary>岗位。组织机构</summary>
-        public const String PositionID = "PositionID";
 
         /// <summary>在线</summary>
         public const String Online = "Online";

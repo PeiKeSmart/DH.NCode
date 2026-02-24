@@ -37,7 +37,7 @@ public enum DatabaseType
     //[Description("Firebird数据库")]
     //Firebird,
 
-    /// <summary>PostgreSQL数据库</summary>
+    /// <summary>SqlCe数据库</summary>
     [Description("PostgreSQL数据库")]
     PostgreSQL = 8,
 
@@ -74,9 +74,7 @@ public enum DatabaseType
     VastBase = 16,
 
     /// <summary>InfluxDB时序数据库</summary>
-
     [Description("InfluxDB时序数据库")]
-
     InfluxDB = 17,
 
     ///// <summary>网络虚拟数据库</summary>

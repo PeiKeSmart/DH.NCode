@@ -1548,14 +1548,14 @@ internal class SqlServerMetaData : RemoteDbMetaData
             // 创建为自增，重建表
             if (field.Identity && !oldfield.Identity)
                 return RebuildTable(field.Table, oldfield.Table);
-
+            
             // 类型改变，必须重建表
             if (IsColumnTypeChanged(field, oldfield))
                 return RebuildTable(field.Table, oldfield.Table);
         }
 
         var sb = Pool.StringBuilder.Get();
-
+        
         if (oldfield != null)
         {
             // 需要提前删除相关索引
@@ -1585,8 +1585,8 @@ internal class SqlServerMetaData : RemoteDbMetaData
                 {
                     // 增加主键约束
                     sb.AppendFormat("Alter Table {0} ADD CONSTRAINT PK_{0} PRIMARY KEY {1}({2}) ON [PRIMARY]",
-                        FormatName(field.Table),
-                        field.Identity ? "CLUSTERED" : "",
+                        FormatName(field.Table), 
+                        field.Identity ? "CLUSTERED" : "", 
                         FormatName(field));
                     sb.AppendLine(";");
                 }
