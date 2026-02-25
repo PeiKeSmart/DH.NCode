@@ -17,8 +17,8 @@ public interface IManageProvider : IServiceProvider
     /// <summary>当前登录用户，设为空则注销登录</summary>
     IManageUser? Current { get; set; }
 
-    ///// <summary>当前租户。正在使用的租户</summary>
-    //ITenant Tenant { get; set; }
+    /// <summary>当前租户。正在使用的租户</summary>
+    ITenant Tenant { get; set; }
 
     /// <summary>密码提供者</summary>
     IPasswordProvider PasswordProvider { get; set; }
@@ -138,8 +138,8 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>当前用户</summary>
     public virtual IManageUser? Current { get => GetCurrent(); set => SetCurrent(value); }
 
-    ///// <summary>当前租户。正在使用的租户</summary>
-    //public ITenant Tenant { get; set; }
+    /// <summary>当前租户。正在使用的租户</summary>
+    public ITenant Tenant { get; set; }
 
     /// <summary>当前用户的所有租户</summary>
     /// <returns></returns>
