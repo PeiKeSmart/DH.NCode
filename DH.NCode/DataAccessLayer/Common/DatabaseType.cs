@@ -77,6 +77,10 @@ public enum DatabaseType
     [Description("InfluxDB时序数据库")]
     InfluxDB = 17,
 
+    /// <summary>NovaDb数据库。支持嵌入模式和网络模式</summary>
+    [Description("NovaDb数据库")]
+    NovaDb = 18,
+
     ///// <summary>网络虚拟数据库</summary>
     //[Description("网络虚拟数据库")]
     //Network = 100,

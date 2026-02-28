@@ -24,6 +24,7 @@ public static class DbFactory
         Register<IRIS>(DatabaseType.IRIS);
         Register<VastBase>(DatabaseType.VastBase);
         Register<InfluxDB>(DatabaseType.InfluxDB);
+        Register<NovaDb>(DatabaseType.NovaDb);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);
         //Register<Network>(DatabaseType.Network);
