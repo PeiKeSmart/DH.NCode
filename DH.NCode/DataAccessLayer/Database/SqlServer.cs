@@ -1686,7 +1686,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         //{ typeof(DateTimeOffset), new String[] { "datetimeoffset({0})" } },
         { typeof(Guid), new String[] { "uniqueidentifier" } },
         //{ typeof(Object), new String[] { "sql_variant" } },
-        //{ typeof(TimeSpan), new String[] { "time({0})" } },
+        { typeof(TimeSpan), new String[] { "time" } },
         { typeof(Boolean), new String[] { "bit" } },
         { typeof(Byte), new String[] { "tinyint" } },
         { typeof(Int16), new String[] { "smallint" } },
