@@ -1059,12 +1059,10 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     protected override void FixField(IDataColumn field, DataRow dr)
     {
-        //修复sqlserver同步到sqlserver建表长度为1的bug
+        // 修复 sqlserver 同步到 sqlserver 建表长度问题
         var rawType = field.RawType?.ToLower();
-        if (rawType == "nvarchar" || rawType == "varchar" || rawType == "char" || rawType == "binary")
-            field.RawType += "(" + field.Length + ")";
-        if (rawType == "varbinary" && field.Length == -1)
-            field.RawType = "varbinary(max)";
+        if (rawType == "nvarchar" || rawType == "varchar" || rawType == "char" || rawType == "binary" || rawType == "varbinary")
+            field.RawType = rawType + "(" + (field.Length == -1 ? "max" : field.Length.ToString()) + ")";
 
         base.FixField(field, dr);
 
