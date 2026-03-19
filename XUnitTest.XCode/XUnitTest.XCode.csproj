@@ -151,4 +151,8 @@
       <DependentUpon>$([System.String]::Copy(%(Filename)).Replace('.Biz', '.cs'))</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Shards\" />
+  </ItemGroup>
 </Project>
