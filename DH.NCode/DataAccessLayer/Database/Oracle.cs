@@ -1124,6 +1124,14 @@ internal class OracleMeta : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
+    /// <summary>
+    /// 创建数据库的 SQL 语句。默认使用 UTF8 编码。
+    /// </summary>
+    public override String CreateDatabaseSQL(String dbname, String? file)
+    {
+        return $"CREATE DATABASE {Database.FormatName(dbname)} CHARACTER SET AL32UTF8";
+    }
+
     public override String DatabaseExistSQL(String dbname) => String.Empty;
 
     protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)

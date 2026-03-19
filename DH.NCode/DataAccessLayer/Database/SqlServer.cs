@@ -1289,7 +1289,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         if (String.IsNullOrEmpty(file))
         {
-            if (String.IsNullOrEmpty(dp)) return $"CREATE DATABASE {Database.FormatName(dbname)}";
+            if (String.IsNullOrEmpty(dp)) return $"CREATE DATABASE {Database.FormatName(dbname)} COLLATE Chinese_PRC_CI_AS";
 
             file = dbname + ".mdf";
         }
@@ -1311,7 +1311,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         var sb = new StringBuilder();
 
-        sb.AppendFormat("CREATE DATABASE {0} ON  PRIMARY", Database.FormatName(dbname));
+        sb.AppendFormat("CREATE DATABASE {0} COLLATE Chinese_PRC_CI_AS ON  PRIMARY", Database.FormatName(dbname));
         sb.AppendLine();
         sb.AppendFormat(@"( NAME = N'{0}', FILENAME = N'{1}', SIZE = 10 , MAXSIZE = UNLIMITED, FILEGROWTH = 10%)", dbname, file);
         sb.AppendLine();
