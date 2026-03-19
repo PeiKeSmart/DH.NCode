@@ -85,21 +85,12 @@ partial class DAL
     /// <returns></returns>
     public static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException($"未注册[IDataTable]");
 
+    /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
+    public BatchCapability BatchCapabilities => Db.BatchCapability;
+
     /// <summary>是否支持批操作</summary>
-    /// <returns></returns>
-    public Boolean SupportBatch
-    {
-        get
-        {
-            if (DbType is DatabaseType.MySql or DatabaseType.Oracle or DatabaseType.SQLite or DatabaseType.PostgreSQL or DatabaseType.PostgreSQL or DatabaseType.NovaDb) return true;
-
-            // SqlServer对批处理有BUG，将在3.0中修复
-            // https://github.com/dotnet/corefx/issues/29391
-            if (DbType == DatabaseType.SqlServer) return true;
-
-            return false;
-        }
-    }
+    [Obsolete("请使用 BatchCapabilities 属性，通过 BatchCapability 枚举判断具体批操作支持情况")]
+    public Boolean SupportBatch => Db.BatchCapability == BatchCapability.Insert;
 
     /// <summary>获取批大小。优先取连接设置，再取全局，默认5000</summary>
     /// <param name="defaultSize">默认批大小</param>

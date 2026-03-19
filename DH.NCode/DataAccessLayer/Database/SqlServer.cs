@@ -17,6 +17,9 @@ internal class SqlServer : RemoteDb
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.SqlServer;
 
+    /// <summary>批量操作能力。SqlServer支持批量Insert/Upsert</summary>
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Upsert;
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()

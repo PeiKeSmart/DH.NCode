@@ -17,6 +17,9 @@ internal class SQLite : FileDbBase
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.SQLite;
 
+    /// <summary>批量操作能力。SQLite支持批量Insert/InsertIgnore/Replace/Upsert</summary>
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Replace | BatchCapability.Upsert;
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()

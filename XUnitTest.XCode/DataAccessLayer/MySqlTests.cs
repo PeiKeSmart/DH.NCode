@@ -704,4 +704,142 @@ public class MySqlTests
         var result10 = formatCommentMethod.Invoke(meta, ["表达式。复杂条件时使用C#表达式，优先于简单值判断"]) as String;
         Assert.Equal("表达式。复杂条件时使用C#表达式，优先于简单值判断", result10);
     }
+
+    [Fact(DisplayName = "MySql连接时BatchCapability包含Insert/InsertIgnore/Replace/Upsert四个基础能力")]
+    public void BatchCapabilityTest()
+    {
+        DAL.AddConnStr("sysMySql_cap", _ConnStr, null, "MySql");
+        var dal = DAL.Create("sysMySql_cap");
+        var cap = dal.BatchCapabilities;
+
+        Assert.True(cap.HasFlag(BatchCapability.Insert));
+        Assert.True(cap.HasFlag(BatchCapability.InsertIgnore));
+        Assert.True(cap.HasFlag(BatchCapability.Replace));
+        Assert.True(cap.HasFlag(BatchCapability.Upsert));
+
+        // 若已加载NewLife.MySql驱动则同时含Update
+        var db = (dal.Db as MySql)!;
+        if (db.IsNewLifeDriver)
+        {
+            Assert.True(cap.HasFlag(BatchCapability.Update));
+            XTrace.WriteLine("已加载NewLife.MySql驱动，BatchCapability包含Update");
+        }
+        else
+        {
+            Assert.False(cap.HasFlag(BatchCapability.Update));
+            XTrace.WriteLine("使用MySql.Data驱动，BatchCapability不含Update");
+        }
+    }
+
+    [Fact(DisplayName = "检测是否使用NewLife.MySql驱动并输出驱动信息")]
+    public void IsNewLifeDriverTest()
+    {
+        DAL.AddConnStr("sysMySql_drv", _ConnStr, null, "MySql");
+        var dal = DAL.Create("sysMySql_drv");
+        var db = (dal.Db as MySql)!;
+
+        var factory = db.Factory;
+        Assert.NotNull(factory);
+
+        var driverName = factory.GetType().FullName;
+        XTrace.WriteLine("MySql驱动: {0}", driverName);
+        XTrace.WriteLine("IsNewLifeDriver: {0}", db.IsNewLifeDriver);
+
+        // 驱动名与IsNewLifeDriver标志保持一致
+        Assert.Equal(driverName?.StartsWithIgnoreCase("NewLife.MySql") == true, db.IsNewLifeDriver);
+    }
+
+    [Fact(DisplayName = "BatchUpsert — 重复主键时更新指定列，新记录时插入")]
+    public void BatchUpsert()
+    {
+        using var split = CreateForBatch("Upsert");
+
+        var list = new List<Role2>
+        {
+            new Role2 { Name = "管理员", Remark = "admin" },
+            new Role2 { Name = "普通用户", Remark = "user" }
+        };
+        var rs = list.BatchInsert();
+        Assert.Equal(list.Count, rs);
+
+        // 已有记录修改Remark + 新增一条记录
+        var list2 = new List<Role2>
+        {
+            new Role2 { Name = "管理员", Remark = "administrator" },
+            new Role2 { Name = "游客", Remark = "guest" }
+        };
+        rs = list2.Upsert(null, [nameof(Role2.Remark)]);
+        Assert.True(rs > 0);
+
+        var all = Role2.FindAll();
+        Assert.Equal(3, all.Count);
+        Assert.Contains(all, e => e.Name == "管理员" && e.Remark == "administrator");
+        Assert.Contains(all, e => e.Name == "普通用户");
+        Assert.Contains(all, e => e.Name == "游客" && e.Remark == "guest");
+    }
+
+    [Fact(DisplayName = "BatchUpdate — 仅NewLife.MySql驱动支持数组参数批量更新，其它驱动跳过")]
+    public void BatchUpdate()
+    {
+        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
+        DAL.AddConnStr("Membership_Batch_mysql", connStr, null, "MySql");
+        var dal = DAL.Create("Membership_Batch_mysql");
+        var db = (dal.Db as MySql)!;
+
+        if (!db.IsNewLifeDriver)
+        {
+            XTrace.WriteLine("当前未加载NewLife.MySql驱动，跳过BatchUpdate集成测试");
+            return;
+        }
+
+        using var split = CreateForBatch("Update");
+
+        var list = new List<Role2>
+        {
+            new Role2 { Name = "管理员" },
+            new Role2 { Name = "高级用户" },
+            new Role2 { Name = "普通用户" }
+        };
+        var rs = list.BatchInsert();
+        Assert.Equal(list.Count, rs);
+
+        // 查出所有记录，修改Remark后批量更新
+        var all = Role2.FindAll();
+        Assert.Equal(list.Count, all.Count);
+        foreach (var r in all)
+            r.Remark = "updated_" + r.Name;
+
+        // Remark已被标记为脏字段，BatchUpdate自动探测脏列进行更新
+        rs = all.BatchUpdate();
+        Assert.Equal(all.Count, rs);
+
+        var all2 = Role2.FindAll();
+        Assert.All(all2, r => Assert.StartsWith("updated_", r.Remark));
+    }
+
+    [Fact(DisplayName = "QueryModelsAsync — 直接映射模型列表，跳过DbTable中间层")]
+    public async void QueryModelsAsyncTest()
+    {
+        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+        DAL.AddConnStr("MySql_QueryModels", connStr, null, "MySql");
+        var dal = DAL.Create("MySql_QueryModels");
+
+        Role.Meta.ConnName = "MySql_QueryModels";
+        Role.Meta.Session.InitData();
+
+        // QueryAsync<T> 对 object 类型走 QueryModelsAsync 路径
+        var list = (await dal.QueryAsync<MyMySqlRole>("select * from role")).ToList();
+        Assert.True(list.Count > 0);
+
+        var admin = list.FirstOrDefault(r => r.Name == "管理员");
+        Assert.NotNull(admin);
+        Assert.True(admin.ID > 0);
+    }
+
+    private class MyMySqlRole
+    {
+        public Int32 ID { get; set; }
+        public String Name { get; set; } = "";
+    }
 }
+

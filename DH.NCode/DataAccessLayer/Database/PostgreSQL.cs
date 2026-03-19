@@ -17,6 +17,9 @@ internal class PostgreSQL : RemoteDb
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.PostgreSQL;
 
+    /// <summary>批量操作能力。PostgreSQL支持批量Insert/Upsert</summary>
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Upsert;
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Npgsql.dll", "Npgsql.NpgsqlFactory");

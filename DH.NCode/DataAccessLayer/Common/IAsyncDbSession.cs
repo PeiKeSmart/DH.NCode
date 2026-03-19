@@ -59,5 +59,12 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
     Task<T?> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
+
+    /// <summary>执行SQL查询，直接映射为实体列表，跳过DbTable中间层</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="ps">命令参数</param>
+    /// <returns></returns>
+    Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps);
     #endregion
 }

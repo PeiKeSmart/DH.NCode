@@ -280,6 +280,9 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复</summary>
     public Int32 BatchSize { get; set; }
 
+    /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
+    public virtual BatchCapability BatchCapability => BatchCapability.None;
+
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     public Int32 CommandTimeout { get; set; }
 

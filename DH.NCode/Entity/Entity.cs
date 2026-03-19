@@ -248,7 +248,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // Oracle/MySql批量插入
         var db = Meta.Session.Dal;
-        if (db.SupportBatch)
+        if (db.BatchCapabilities.HasFlag(BatchCapability.Upsert))
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 

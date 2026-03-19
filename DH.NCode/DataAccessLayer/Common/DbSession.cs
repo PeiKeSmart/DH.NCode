@@ -590,6 +590,17 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         });
     }
 
+    /// <summary>执行SQL查询，直接映射为实体列表，跳过DbTable中间层</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="ps">命令参数</param>
+    /// <returns></returns>
+    public virtual async Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps)
+    {
+        var dt = await QueryAsync(sql, ps).ConfigureAwait(false);
+        return dt.ReadModels<T>();
+    }
+
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>

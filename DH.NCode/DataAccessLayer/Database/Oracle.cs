@@ -19,6 +19,9 @@ internal class Oracle : RemoteDb
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.Oracle;
 
+    /// <summary>批量操作能力。Oracle支持批量Insert/Update/Upsert（参数绑定数组）</summary>
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Update | BatchCapability.Upsert;
+
     private Version _minVersion = new("23.26");
     /// <summary>创建工厂</summary>
     /// <returns></returns>

@@ -127,7 +127,8 @@ public static class EntityExtension
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (!session2.Dal.SupportBatch) return DoAction(array, useTransition, e => e.Insert(), session2);
+        if (!session2.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert))
+            return DoAction(array, useTransition, e => e.Insert(), session2);
 
         // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
         var list3 = new List<T>(array.Length);
@@ -172,8 +173,8 @@ public static class EntityExtension
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
 
-        // Oracle批量更新
-        return session.Dal.DbType == DatabaseType.Oracle && array.Length > 1
+        // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
+        return session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update) && array.Length > 1
             ? BatchUpdate(array.Valid(false), null, session)
             : DoAction(array, useTransition, e => e.Update(), session);
     }
@@ -202,7 +203,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && array.Length > 1)
+        if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert) && array.Length > 1)
         {
             // 根据是否来自数据库，拆分为两组
             var (updates, others) = Split(array);
@@ -230,7 +231,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && array.Length > 1)
+        if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert) && array.Length > 1)
         {
             // 根据是否来自数据库，拆分为两组
             var (updates, others) = Split(array);
@@ -286,11 +287,11 @@ public static class EntityExtension
             if (inserts.Count > 0) rs += BatchInsert(inserts, option, session);
             if (updates.Count > 0)
             {
-                // 只有Oracle支持批量Update
-                if (session.Dal.DbType == DatabaseType.Oracle)
+                // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
+                if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update))
                     rs += BatchUpdate(updates, option, session);
                 else
-                    upserts.AddRange(upserts);
+                    rs += updates.Update(null, session);
             }
         }
 

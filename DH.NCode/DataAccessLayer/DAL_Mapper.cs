@@ -105,15 +105,17 @@ public partial class DAL
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
-        var dt = await QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync)).ConfigureAwait(false);
-
-        // 优先特殊处理基础类型，选择第一字段
         var type = typeof(T);
         var utype = Nullable.GetUnderlyingType(type);
         if (utype != null) type = utype;
-        if (type.GetTypeCode() != TypeCode.Object) return dt.Rows.Select(e => e[0].ChangeType<T>()!);
 
-        return dt.ReadModels<T>();
+        // 对象类型，通过ReadModelsAsync跳过DbTable中间层
+        if (type.GetTypeCode() == TypeCode.Object)
+            return await QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.QueryModelsAsync<T>(s, Db.CreateParameters(p)), nameof(QueryAsync)).ConfigureAwait(false);
+
+        // 基础类型，选择第一字段
+        var dt = await QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync)).ConfigureAwait(false);
+        return dt.Rows.Select(e => e[0].ChangeType<T>()!);
     }
 
     /// <summary>查询Sql并返回单个结果</summary>

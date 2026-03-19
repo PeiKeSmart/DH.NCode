@@ -1,9 +1,11 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Net;
+using System.Reflection;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace XCode.DataAccessLayer;
 
@@ -13,6 +15,20 @@ internal class MySql : RemoteDb
 
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.MySql;
+
+    /// <summary>批量操作能力。NewLife.MySql驱动支持批量Insert和Update，其它驱动仅支持批量Insert</summary>
+    public override BatchCapability BatchCapability
+    {
+        get
+        {
+            var cap = BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Replace | BatchCapability.Upsert;
+            if (IsNewLifeDriver) cap |= BatchCapability.Update;
+            return cap;
+        }
+    }
+
+    /// <summary>是否NewLife.MySql驱动</summary>
+    internal Boolean IsNewLifeDriver => GetFactory(false)?.GetType().FullName?.StartsWithIgnoreCase("NewLife.MySql") == true;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
@@ -328,6 +344,72 @@ internal class MySqlSession : RemoteDbSession
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
 
+    private static MethodInfo? _readTableAsync;
+
+    /// <summary>重载同步填充，使用MySqlDataReader.ReadTableAsync零拷贝读取</summary>
+    /// <param name="dr">数据读取器</param>
+    /// <returns></returns>
+    protected override DbTable OnFill(DbDataReader dr)
+    {
+        var db = (Database as MySql)!;
+        if (!db.IsNewLifeDriver) return base.OnFill(dr);
+
+        var method = _readTableAsync ??= dr.GetType().GetMethod("ReadTableAsync", [typeof(CancellationToken)]);
+        if (method == null) return base.OnFill(dr);
+
+        return method.As<Func<CancellationToken, Task<DbTable>>>(dr)!(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    /// <summary>重载异步查询，使用MySqlDataReader.ReadTableAsync零拷贝读取</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="ps">命令参数</param>
+    /// <returns></returns>
+    public override Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
+    {
+        var db = (Database as MySql)!;
+        if (!db.IsNewLifeDriver) return base.QueryAsync(sql, ps);
+
+        using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
+        return ExecuteAsync(cmd, true, async cmd2 =>
+        {
+            using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
+            var method = _readTableAsync ??= dr.GetType().GetMethod("ReadTableAsync", [typeof(CancellationToken)]);
+            if (method != null)
+                return await method.As<Func<CancellationToken, Task<DbTable>>>(dr)!(CancellationToken.None).ConfigureAwait(false);
+            var dt = new DbTable();
+            await dt.ReadAsync(dr).ConfigureAwait(false);
+            return dt;
+        });
+    }
+
+    private static MethodInfo? _readModelsAsyncDef;
+
+    /// <summary>直接映射为实体列表，跳过DbTable中间层</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="ps">命令参数</param>
+    /// <returns></returns>
+    public override Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps)
+    {
+        var db = (Database as MySql)!;
+        if (!db.IsNewLifeDriver) return base.QueryModelsAsync<T>(sql, ps);
+
+        using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
+        return ExecuteAsync(cmd, true, async cmd2 =>
+        {
+            using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
+            var openDef = _readModelsAsyncDef ??= dr.GetType().GetMethod("ReadModelsAsync");
+            if (openDef != null)
+            {
+                var method = openDef.MakeGenericMethod(typeof(T));
+                return (IEnumerable<T>)await method.As<Func<CancellationToken, Task<IEnumerable<T>>>>(dr)!(CancellationToken.None).ConfigureAwait(false);
+            }
+            var dt = new DbTable();
+            await dt.ReadAsync(dr).ConfigureAwait(false);
+            return dt.ReadModels<T>();
+        });
+    }
+
     #endregion 基本方法 查询/执行
 
     #region 批量操作
@@ -392,6 +474,97 @@ internal class MySqlSession : RemoteDbSession
     {
         var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
         return Execute(sql);
+    }
+
+    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
+    {
+        if ((updateColumns == null || updateColumns.Count == 0)
+            && (addColumns == null || addColumns.Count == 0)) return null;
+
+        var sb = Pool.StringBuilder.Get();
+        var db = (Database as DbBase)!;
+
+        sb.AppendFormat("Update {0} Set ", db.FormatName(table));
+        foreach (var dc in columns)
+        {
+            if (dc.Identity || dc.PrimaryKey) continue;
+
+            if (addColumns != null && addColumns.Contains(dc.Name))
+            {
+                sb.AppendFormat("{0}={0}+{1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+            else if (updateColumns != null && updateColumns.Contains(dc.Name))
+            {
+                sb.AppendFormat("{0}={1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+        }
+        sb.Length--;
+
+        sb.Append(" Where ");
+        foreach (var dc in columns)
+        {
+            if (!dc.PrimaryKey) continue;
+
+            sb.AppendFormat("{0}={1}", db.FormatName(dc), db.FormatParameterName(dc.Name));
+            sb.Append(" And ");
+            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+        }
+        sb.Length -= " And ".Length;
+
+        return sb.Return(true);
+    }
+
+    private IDataParameter[] GetArrayParameters(IDataColumn[] columns, ICollection<String> ps, IModel[] list)
+    {
+        var db = Database;
+        var dps = new List<IDataParameter>();
+        foreach (var dc in columns)
+        {
+            if (!ps.Contains(dc.Name)) continue;
+
+            var type = dc.DataType ?? throw new ArgumentNullException(nameof(dc.DataType));
+            if (type.IsEnum) type = typeof(Int32);
+
+            var arr = Array.CreateInstance(type, list.Length);
+            for (var k = 0; k < list.Length; k++)
+                arr.SetValue(list[k][dc.Name], k);
+
+            dps.Add(db.CreateParameter(dc.Name, arr, dc));
+        }
+        return dps.ToArray();
+    }
+
+    private static MethodInfo? _executeArrayBatch;
+
+    /// <summary>批量更新，使用NewLife.MySql的数组参数绑定</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要更新的字段，默认所有字段</param>
+    /// <param name="updateColumns">要更新的字段，默认脏数据</param>
+    /// <param name="addColumns">要累加更新的字段，默认累加</param>
+    /// <param name="list">实体列表</param>
+    /// <returns></returns>
+    public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
+    {
+        var db = (Database as MySql)!;
+        if (!db.IsNewLifeDriver) return base.Update(table, columns, updateColumns, addColumns, list);
+
+        var ps = new HashSet<String>();
+        var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        if (sql.IsNullOrEmpty()) return 0;
+
+        var arr = list.ToArray();
+        var dps = GetArrayParameters(columns, ps, arr);
+        DefaultSpan.Current?.AppendTag(sql);
+
+        using var cmd = OnCreateCommand(sql, CommandType.Text, dps);
+        return Execute(cmd, false, cmd2 =>
+        {
+            var method = _executeArrayBatch ??= cmd2.GetType().GetMethod("ExecuteArrayBatch", [typeof(Int32)]);
+            if (method == null) return cmd2.ExecuteNonQuery();
+            return method.As<Func<Int32, Int32>>(cmd2)!(arr.Length);
+        });
     }
 
     #endregion 批量操作

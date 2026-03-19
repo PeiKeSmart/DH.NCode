@@ -37,6 +37,29 @@ public enum NameFormats
     Underline,
 }
 
+/// <summary>批量操作能力。Flags枚举，不同数据库支持不同批量操作</summary>
+[Flags]
+public enum BatchCapability
+{
+    /// <summary>不支持批量操作</summary>
+    None = 0,
+
+    /// <summary>支持批量插入</summary>
+    Insert = 1,
+
+    /// <summary>支持批量更新（参数绑定数组）</summary>
+    Update = 2,
+
+    /// <summary>支持批量Upsert</summary>
+    Upsert = 4,
+
+    /// <summary>支持批量替换</summary>
+    Replace = 8,
+
+    /// <summary>支持批量忽略插入</summary>
+    InsertIgnore = 16,
+}
+
 /// <summary>数据库接口</summary>
 /// <remarks>
 /// 抽象数据库的功能特点。
@@ -90,6 +113,9 @@ public interface IDatabase : IDisposable2
 
     /// <summary>批大小。用于批量操作数据，默认5000</summary>
     Int32 BatchSize { get; set; }
+
+    /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
+    BatchCapability BatchCapability { get; }
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     Int32 CommandTimeout { get; set; }
