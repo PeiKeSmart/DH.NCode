@@ -84,10 +84,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
-    <PackageReference Include="DH.NIP" Version="4.21.2026.304-beta0022" />
+    <PackageReference Include="DH.NIP" Version="4.21.2026.305-beta0044" />
     <PackageReference Include="DH.UnitTest" Version="4.21.2026.304-beta0007" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.3" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.5" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
