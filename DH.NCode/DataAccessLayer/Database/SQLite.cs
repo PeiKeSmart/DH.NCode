@@ -324,23 +324,57 @@ internal class SQLiteSession : FileDbSession
     /// <returns></returns>
     public override Int32 Truncate(String tableName)
     {
-        // 先删除数据再收缩
-        var sql = $"Delete From {Database.FormatName(tableName)}";
-        var rs = Execute(sql);
+        // 从 sqlite_master 获取建表DDL及索引DDL，使用删除重建代替 DELETE+VACUUM
+        var ds = Query($"Select type,sql From sqlite_master Where tbl_name='{tableName}' And sql Is Not Null", null);
 
-        // 该数据库没有任何表用到自增时，序列表不存在
-        try
+        String? createSql = null;
+        List<String> indexSqls = [];
+        for (var i = 0; i < ds.Rows.Count; i++)
         {
-            Execute($"Update sqlite_sequence Set seq=0 where name='{tableName}'");
-        }
-        catch (Exception ex) { XTrace.WriteException(ex); }
+            var type = ds.Get<String>(i, "type");
+            var sql2 = ds.Get<String>(i, "sql");
+            if (sql2.IsNullOrEmpty()) continue;
 
-        try
-        {
-            //rs += Execute("PRAGMA auto_vacuum = 1");
-            rs += Execute("VACUUM");
+            if (type == "table") createSql = sql2;
+            else if (type == "index") indexSqls.Add(sql2);
         }
-        catch (Exception ex) { XTrace.WriteException(ex); }
+
+        var rs = 0;
+        if (!createSql.IsNullOrEmpty())
+        {
+            // Drop Table 不扫描数据行，比 DELETE 快几个数量级；Drop 后自动清理 sqlite_sequence
+            Execute($"Drop Table {Database.FormatName(tableName)}");
+            Execute(createSql!);
+            foreach (var idx in indexSqls)
+            {
+                Execute(idx);
+            }
+        }
+        else
+        {
+            // 无法获取DDL时，回退到普通 DELETE
+            rs = Execute($"Delete From {Database.FormatName(tableName)}");
+
+            // 该数据库没有任何表用到自增时，序列表不存在
+            try
+            {
+                Execute($"Update sqlite_sequence Set seq=0 where name='{tableName}'");
+            }
+            catch (Exception ex) { XTrace.WriteException(ex); }
+        }
+
+        // 仅当数据库只有此一张表且未启用 auto_vacuum 时执行 VACUUM 回收磁盘空间
+        // 多表时 VACUUM 需重写整个数据库文件，非常耗时
+        if (!(Database as SQLite)!.AutoVacuum)
+        {
+            try
+            {
+                var countDs = Query("Select tbl_name From sqlite_master Where type='table'", null);
+                if (countDs.Rows.Count <= 1)
+                    Execute("VACUUM");
+            }
+            catch (Exception ex) { XTrace.WriteException(ex); }
+        }
 
         return rs;
     }
