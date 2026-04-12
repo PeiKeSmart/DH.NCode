@@ -185,7 +185,7 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("SingleTableVacuum");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [BigTable] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Data] nvarchar(200))");
+        ss.Execute("Create Table [BigTable] ([ID] integer PRIMARY KEY, [Data] nvarchar(200))");
         // 插入足够多行以占用多个页面（每页约4KB，每行约60字节，200行≈3KB→跨多页）
         InsertRows(ss, "BigTable", 200);
 
@@ -227,21 +227,32 @@ public class SQLiteTruncateTests
     [System.ComponentModel.Description("内存数据库Truncate正常清空数据，不受VACUUM限制")]
     public void Truncate_MemoryDatabase_ClearsAllRows()
     {
-        // 内存数据库每次连接独立，用唯一 connName 避免冲突
+        // 共享内存数据库配合事务保持连接生命周期，避免命令间连接切换导致表丢失
         var connName = $"SQLite_Truncate_Memory_{Rand.Next(10000, 99999)}";
-        DAL.AddConnStr(connName, "Data Source=:memory:", null, "SQLite");
+        DAL.AddConnStr(connName, $"Data Source={connName};Mode=Memory;Cache=Shared", null, "SQLite");
         var dal = DAL.Create(connName);
+        using var keepAlive = dal.Db.OpenConnection();
         var ss = dal.Session;
 
-        ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
-        ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
-        ss.Execute("Insert Into [TestRole] ([Name]) Values ('普通用户')");
+        ss.BeginTransaction(IsolationLevel.ReadCommitted);
+        try
+        {
+            ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
+            ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
+            ss.Execute("Insert Into [TestRole] ([Name]) Values ('普通用户')");
 
-        Assert.Equal(2L, ss.ExecuteScalar<Int64>("Select count(*) From [TestRole]"));
+            Assert.Equal(2L, ss.ExecuteScalar<Int64>("Select count(*) From [TestRole]"));
 
-        ss.Truncate("TestRole");
+            ss.Truncate("TestRole");
 
-        Assert.Equal(0L, ss.ExecuteScalar<Int64>("Select count(*) From [TestRole]"));
+            Assert.Equal(0L, ss.ExecuteScalar<Int64>("Select count(*) From [TestRole]"));
+            ss.Commit();
+        }
+        catch
+        {
+            ss.Rollback();
+            throw;
+        }
     }
 
     #endregion
