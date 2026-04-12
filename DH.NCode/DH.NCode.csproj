@@ -7,7 +7,7 @@
     <Description>高性能 .NET 数据中间件（超级ORM），聚焦添删改查与海量数据，内置多级缓存、自动迁移、分表分库、强类型查询与跨库迁移。</Description>
     <Company>湖北登灏科技有限公司</Company>
     <Copyright>©2020-2026 湖北登灏科技有限公司</Copyright>
-    <VersionPrefix>4.21</VersionPrefix>
+    <VersionPrefix>4.22</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增InfluxDB时序数据库与NovaDb支持；TDengine改用HTTP驱动；TableItem支持启动时全局配置表名和连接名；Meta.Session自动同步；移除模型表外部XML映射功能；移除SQLite WAL手动干预代码</PackageReleaseNotes>
+    <PackageReleaseNotes>重构远程数据库服务并增强鉴权与测试覆盖；引入BatchCapability批量能力与TenantInterceptor；修复SqlServer类型映射与空表SetValue异常；修复KingBase SELECT列名引用问题；优化SQLite Truncate为Drop重建并增强全路径测试</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
