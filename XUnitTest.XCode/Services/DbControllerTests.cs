@@ -99,9 +99,11 @@ public class DbControllerTests : IDisposable
 
         Assert.NotNull(result);
         var packet = Assert.IsAssignableFrom<IPacket>(result);
+        Assert.True(packet.Total > 0);
 
         var dt = new DbTable();
         dt.Read(packet);
+        Assert.Single(dt.Rows);
         Assert.Equal("test", dt.Rows[0][1]?.ToString());
     }
 

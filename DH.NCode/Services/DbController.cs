@@ -77,8 +77,13 @@ public class DbController
         var rs = Service.Query(dal, sql, ps);
         if (rs == null) return null;
 
-        // 使用二进制包返回结果集，减少序列化开销
-        return rs.ToPacket();
+        //!!! ToPacket 暂时有问题，后续版本更新
+        //return rs.ToPacket();
+
+        // 使用 Binary 格式序列化结果集，与 DbTable.Read(IPacket) 保持一致
+        var ms = new MemoryStream();
+        rs.Write(ms);
+        return ms.ToArray().AsPacket();
     }
 
     /// <summary>快速查询单表记录数</summary>

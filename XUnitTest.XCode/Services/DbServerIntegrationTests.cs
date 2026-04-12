@@ -115,15 +115,11 @@ public class DbServerIntegrationTests : IAsyncLifetime
 
         Assert.Equal(1, affectedRows);
 
-        // 验证更新结果
-        var result = await client.QueryAsync(
-            "SELECT Value FROM TestTable WHERE Id = 1",
-            null
-        );
-
-        Assert.NotNull(result);
-        Assert.Single(result.Rows);
-        Assert.Equal(110L, Convert.ToInt64(result.Rows[0][0]));
+        // 远程查询验证更新结果
+        var verifyResult = await client.QueryAsync("SELECT [Value] FROM TestTable WHERE Id = 1", null);
+        Assert.NotNull(verifyResult);
+        Assert.Single(verifyResult.Rows);
+        Assert.Equal(110L, Convert.ToInt64(verifyResult.Rows[0][0]));
     }
 
     [Fact(DisplayName = "插入并返回自增ID")]
@@ -141,16 +137,12 @@ public class DbServerIntegrationTests : IAsyncLifetime
 
         Assert.True(newId > 0);
 
-        // 验证插入的记录
-        var result = await client.QueryAsync(
-            "SELECT Name, Value FROM TestTable WHERE Id = @id",
-            new Dictionary<String, Object?> { { "@id", newId } }
-        );
-
-        Assert.NotNull(result);
-        Assert.Single(result.Rows);
-        Assert.Equal("NewRecord", result.Rows[0][0]?.ToString());
-        Assert.Equal(999L, Convert.ToInt64(result.Rows[0][1]));
+        // 远程查询验证插入结果
+        var verifyResult = await client.QueryAsync($"SELECT [Name], [Value] FROM TestTable WHERE Id = {newId}", null);
+        Assert.NotNull(verifyResult);
+        Assert.Single(verifyResult.Rows);
+        Assert.Equal("NewRecord", verifyResult.Rows[0][0]?.ToString());
+        Assert.Equal(999L, Convert.ToInt64(verifyResult.Rows[0][1]));
     }
 
     [Fact(DisplayName = "快速查询行数")]
@@ -193,10 +185,11 @@ public class DbServerIntegrationTests : IAsyncLifetime
         );
         Assert.Equal(1, affectedRows);
 
-        // 验证更新
-        result = dal.Query("SELECT Value FROM TestTable WHERE Id = 2", null);
-        Assert.Single(result.Rows);
-        Assert.Equal(555L, Convert.ToInt64(result.Rows[0][0]));
+        // 远程查询验证更新结果（通过NetworkDb）
+        var verifyResult = dal.Query("SELECT [Value] FROM TestTable WHERE Id = 2", null);
+        Assert.NotNull(verifyResult);
+        Assert.Single(verifyResult.Rows);
+        Assert.Equal(555L, Convert.ToInt64(verifyResult.Rows[0][0]));
     }
 
     [Fact(DisplayName = "参数化查询")]
