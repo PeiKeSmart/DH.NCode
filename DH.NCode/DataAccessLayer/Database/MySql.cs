@@ -483,6 +483,7 @@ internal class MySqlSession : RemoteDbSession
 
         var sb = Pool.StringBuilder.Get();
         var db = (Database as DbBase)!;
+        var setterCount = 0;
 
         sb.AppendFormat("Update {0} Set ", db.FormatName(table));
         foreach (var dc in columns)
@@ -492,15 +493,23 @@ internal class MySqlSession : RemoteDbSession
             if (addColumns != null && addColumns.Contains(dc.Name))
             {
                 sb.AppendFormat("{0}={0}+{1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
+                setterCount++;
                 if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
             }
             else if (updateColumns != null && updateColumns.Contains(dc.Name))
             {
                 sb.AppendFormat("{0}={1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
+                setterCount++;
                 if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
             }
         }
+
+        if (setterCount == 0) return null;
+
         sb.Length--;
+
+        var pks = columns.Where(e => e.PrimaryKey).ToArray();
+        if (pks.Length == 0) throw new InvalidOperationException("未指定用于更新的主键");
 
         sb.Append(" Where ");
         foreach (var dc in columns)

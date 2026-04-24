@@ -9,6 +9,7 @@ using NewLife.Serialization;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+using XCode.Model;
 using Xunit;
 using XUnitTest.XCode.TestEntity;
 
@@ -815,6 +816,45 @@ public class MySqlTests
 
         var all2 = Role2.FindAll();
         Assert.All(all2, r => Assert.StartsWith("updated_", r.Remark));
+    }
+
+    [Fact(DisplayName = "BatchUpdate — 指定不存在更新列时安全返回0，不生成非法SQL")]
+    public void BatchUpdate_WithUnknownColumns_ReturnsZero()
+    {
+        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
+        DAL.AddConnStr("Membership_Batch_mysql_unknown", connStr, null, "MySql");
+        var dal = DAL.Create("Membership_Batch_mysql_unknown");
+        var db = (dal.Db as MySql)!;
+
+        if (!db.IsNewLifeDriver)
+        {
+            XTrace.WriteLine("当前未加载NewLife.MySql驱动，跳过BatchUpdate集成测试");
+            return;
+        }
+
+        using var split = CreateForBatch("Update_UnknownColumns");
+
+        var list = new List<Role2>
+        {
+            new Role2 { Name = "管理员" },
+            new Role2 { Name = "高级用户" }
+        };
+        var rs = list.BatchInsert();
+        Assert.Equal(list.Count, rs);
+
+        var all = Role2.FindAll();
+        Assert.Equal(list.Count, all.Count);
+
+        rs = all.BatchUpdate(new BatchOption
+        {
+            UpdateColumns = ["NotExists"],
+            AddColumns = []
+        });
+
+        Assert.Equal(0, rs);
+
+        var all2 = Role2.FindAll();
+        Assert.All(all2, r => Assert.Null(r.Remark));
     }
 
     [Fact(DisplayName = "QueryModelsAsync — 直接映射模型列表，跳过DbTable中间层")]
