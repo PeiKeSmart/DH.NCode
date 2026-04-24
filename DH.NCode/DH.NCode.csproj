@@ -114,6 +114,6 @@
     <Content Include="..\.github\instructions\xcode.instructions.md" Pack="true" PackagePath="content\.github\instructions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="4.22.2026.412-beta0524" />
+    <PackageReference Include="DH.NCore" Version="4.22.2026.421-beta1328" />
   </ItemGroup>
 </Project>
