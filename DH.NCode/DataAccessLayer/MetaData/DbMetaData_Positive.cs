@@ -411,6 +411,9 @@ partial class DbMetaData
     {
         var type = field.DataType;
         if (type == null) return null;
+        // 处理 Nullable<T>
+        var underlying = Nullable.GetUnderlyingType(type);
+        if (null != underlying) type = underlying;
 
         //处理数组
         var isArrayField = IsArrayField(type);
@@ -431,7 +434,11 @@ partial class DbMetaData
             }
         }
 
-        if (!Types.TryGetValue(type, out var ns)) return null;
+        if (!Types.TryGetValue(type, out var ns))
+        {
+
+            return null;
+        }
 
         var typeName = ns.FirstOrDefault();
         // 大文本选第二个类型
