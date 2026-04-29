@@ -45,12 +45,22 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal protected override void InitData()
     {
+        if (Meta.Count < 100)
+        {
+            var def = FindAllWithCache().FirstOrDefault(e => e.Code == "MRZH");
+            if (def != null && def.Enable)
+            {
+                def.Code = "Default";
+                def.Update();
+            }
+        }
         if (Meta.Count > 0) return;
 
         if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}数据……", typeof(Tenant).Name);
 
         var entity = new Tenant
         {
+            Code = "Default",
             Name = "默认租户",
             Type = TenantTypes.企业,
             Enable = true
