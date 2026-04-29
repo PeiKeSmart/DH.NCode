@@ -184,7 +184,24 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 Save<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
+    [Obsolete("=> Save(list, useTransition, session, true)")]
+    public static Int32 Save<T>(this IEnumerable<T> list, Boolean? useTransition, IEntitySession? session) where T : IEntity => Save(list, useTransition, session, true);
+
+    /// <summary>把整个保存更新到数据库，保存时不需要验证</summary>
+    /// <param name="list">实体列表</param>
+    /// <param name="useTransition">是否使用事务保护</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns></returns>
+    [Obsolete("=> Save(list, useTransition, session, false)")]
+    public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity => Save(list, useTransition, session, false);
+
+    /// <summary>把整个保存更新到数据库</summary>
+    /// <param name="list">实体列表</param>
+    /// <param name="useTransition">是否使用事务保护</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <param name="valid">是否验证实体。调用实体Valid方法</param>
+    /// <returns></returns>
+    public static Int32 Save<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null, Boolean valid = true) where T : IEntity
     {
         /*
        * Save的几个场景：
@@ -203,43 +220,31 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert) && array.Length > 1)
+        var caps = session.Dal.BatchCapabilities;
+        if (array.Length > 1 && (caps.HasFlag(BatchCapability.Insert) || caps.HasFlag(BatchCapability.Update) || caps.HasFlag(BatchCapability.Upsert)))
         {
             // 根据是否来自数据库，拆分为两组
             var (updates, others) = Split(array);
-            array = updates.ToArray();
-            rs += BatchSave(session, others.Valid(true), null);
-        }
+            if (caps.HasFlag(BatchCapability.Update))
+            {
+                // updates 来自数据库，对应 Update 操作，isNew=false
+                if (valid) updates = updates.Valid(false);
+                rs += BatchUpdate(updates, null, session);
+                array = [];
+            }
+            else
+            {
+                array = updates.ToArray();
+            }
 
-        return rs + DoAction(array, useTransition, e => e.Save(), session);
-    }
-
-    /// <summary>把整个保存更新到数据库，保存时不需要验证</summary>
-    /// <param name="list">实体列表</param>
-    /// <param name="useTransition">是否使用事务保护</param>
-    /// <param name="session">指定会话，分表分库时必用</param>
-    /// <returns></returns>
-    public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
-    {
-        // 避免列表内实体对象为空
-        var array = list.AsArray();
-        var entity = array.FirstOrDefault(e => e != null);
-        if (entity == null) return 0;
-
-        var rs = 0;
-        var fact = entity.GetType().AsFactory();
-        session ??= fact.Session;
-
-        // Oracle/MySql批量插入
-        if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert) && array.Length > 1)
-        {
-            // 根据是否来自数据库，拆分为两组
-            var (updates, others) = Split(array);
-            array = updates.ToArray();
+            if (valid) others = others.Valid(true);
             rs += BatchSave(session, others, null);
         }
 
-        return rs + DoAction(array, useTransition, e => e.SaveWithoutValid(), session);
+        if (valid)
+            return rs + DoAction(array, useTransition, e => e.Save(), session);
+        else
+            return rs + DoAction(array, useTransition, e => e.SaveWithoutValid(), session);
     }
 
     /// <summary>拆分为来自数据库的更新和其它的Upsert</summary>
@@ -265,11 +270,13 @@ public static class EntityExtension
     {
         // 没有其它唯一索引，且主键为空时，走批量插入
         var rs = 0;
+        // 有唯一索引时，无法拆分为 Insert/Update，统一走 Upsert
+        var upserts = list;
         if (!session.DataTable.Indexes.Any(di => di.Unique))
         {
             var inserts = new List<T>();
             var updates = new List<T>();
-            var upserts = new List<T>();
+            var upsertList = new List<T>();
             foreach (var item in list)
             {
                 // 来自数据库，更新
@@ -280,9 +287,9 @@ public static class EntityExtension
                     inserts.Add(item);
                 // 其它 Upsert
                 else
-                    upserts.Add(item);
+                    upsertList.Add(item);
             }
-            list = upserts;
+            upserts = upsertList;
 
             if (inserts.Count > 0) rs += BatchInsert(inserts, option, session);
             if (updates.Count > 0)
@@ -295,7 +302,7 @@ public static class EntityExtension
             }
         }
 
-        if (list.Any()) rs += BatchUpsert(list, option, session);
+        if (upserts.Any()) rs += BatchUpsert(upserts, option, session);
 
         return rs;
     }
@@ -433,6 +440,33 @@ public static class EntityExtension
     #endregion
 
     #region 批量更新
+    /// <summary>为批量插入类操作准备数据列。处理自增列、脏数据过滤等逻辑</summary>
+    /// <param name="fact">实体工厂</param>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="includeIdentity">是否强制包含自增列（Upsert场景需要）</param>
+    /// <returns>经过处理的数据列数组</returns>
+    private static IDataColumn[] BuildInsertColumns<T>(IEntityFactory fact, IList<T> list, BatchOption option, Boolean includeIdentity = false) where T : IEntity
+    {
+        var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
+
+        if (!includeIdentity)
+        {
+            // 第一列数据包含非零自增，表示要插入自增值；否则排除自增列，让数据库自动填充
+            var id = columns.FirstOrDefault(e => e.Identity);
+            if (id != null && list[0][id.Name].ToLong() == 0)
+                columns = columns.Where(e => !e.Identity).ToArray();
+        }
+
+        if (!option.FullInsert && !fact.FullInsert)
+        {
+            var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+            columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e)).ToArray();
+        }
+
+        return columns;
+    }
+
     /// <summary>批量插入</summary>
     /// <typeparam name="T">实体类型</typeparam>
     /// <param name="list">实体列表</param>
@@ -472,32 +506,7 @@ public static class EntityExtension
         var dal = session.Dal;
         if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
-        if (option.Columns == null)
-        {
-            var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
-
-            // 第一列数据包含非零自增，表示要插入自增值
-            var id = columns.FirstOrDefault(e => e.Identity);
-            if (id != null)
-            {
-                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
-                if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
-            }
-
-            // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
-            //var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-            //if (fact.FullInsert)
-            //    columns = columns.Where(e => e.Nullable || dirtys.Contains(e.Name)).ToArray();
-            //else
-            //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
-            if (!option.FullInsert && !fact.FullInsert)
-            {
-                var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
-            }
-
-            option.Columns = columns;
-        }
+        option.Columns ??= BuildInsertColumns(fact, list2, option);
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -569,27 +578,7 @@ public static class EntityExtension
         var dal = session.Dal;
         if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
-        if (option.Columns == null)
-        {
-            var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
-
-            // 第一列数据包含非零自增，表示要插入自增值
-            var id = columns.FirstOrDefault(e => e.Identity);
-            if (id != null)
-            {
-                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
-                if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
-            }
-
-            // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
-            if (!option.FullInsert && !fact.FullInsert)
-            {
-                var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
-            }
-
-            option.Columns = columns;
-        }
+        option.Columns ??= BuildInsertColumns(fact, list2, option);
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -661,27 +650,7 @@ public static class EntityExtension
         var dal = session.Dal;
         if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
-        if (option.Columns == null)
-        {
-            var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
-
-            // 第一列数据包含非零自增，表示要插入自增值
-            var id = columns.FirstOrDefault(e => e.Identity);
-            if (id != null)
-            {
-                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
-                if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
-            }
-
-            // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
-            if (!option.FullInsert && !fact.FullInsert)
-            {
-                var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
-            }
-
-            option.Columns = columns;
-        }
+        option.Columns ??= BuildInsertColumns(fact, list2, option);
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;

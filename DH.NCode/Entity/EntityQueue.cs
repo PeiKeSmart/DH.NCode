@@ -286,7 +286,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
                     batch.BatchReplace(option: null, ss);
                     break;
                 default:
-                    batch.SaveWithoutValid(null, ss);
+                    batch.Save(null, ss, false);
                     break;
             }
         }
@@ -296,7 +296,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
             if (InsertOnly)
                 batch.Insert(null, ss);
             else
-                batch.SaveWithoutValid(null, ss);
+                batch.Save(null, ss, false);
         }
     }
 
