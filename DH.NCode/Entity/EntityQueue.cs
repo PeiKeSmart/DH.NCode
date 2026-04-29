@@ -47,7 +47,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
     public ITracer? Tracer { get; set; } = DAL.GlobalTracer;
 
     private TimerX? _Timer;
-    private String? _lastTraceId;
+    //private String? _lastTraceId;
 
     #endregion
     #region 构造
@@ -80,6 +80,9 @@ public class EntityQueue(IEntitySession session) : DisposeBase
     {
         if (_count >= MaxEntity) return false;
 
+        var ss = Session;
+        using var span = Tracer?.NewSpan($"db:{ss.ConnName}:AddQueue:{DAL.TrimTableName(ss.TableName)}", new { entity = entity + "", msDelay });
+
         // 首次使用时初始化定时器
         if (_Timer == null)
         {
@@ -89,7 +92,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
             }
         }
 
-        _lastTraceId = DefaultSpan.Current?.ToString();
+        //_lastTraceId = DefaultSpan.Current?.ToString();
 
         var rs = false;
         if (msDelay <= 0)
@@ -103,8 +106,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         // 超过最大值时，堵塞一段时间，等待消费完成
         if (_count >= MaxEntity)
         {
-            var ss = Session;
-            using var span = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}", _count);
+            using var span2 = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}", _count);
 
             // 最多等待15秒，避免死等阻塞业务处理
             var times = 150;
@@ -167,8 +169,8 @@ public class EntityQueue(IEntitySession session) : DisposeBase
             var ss = Session;
             DefaultSpan.Current = null;
             using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{DAL.TrimTableName(ss.TableName)}", list.Count, list.Count);
-            if (_lastTraceId != null) span?.Detach(_lastTraceId);
-            _lastTraceId = null;
+            //if (_lastTraceId != null) span?.Detach(_lastTraceId);
+            //_lastTraceId = null;
 
             try
             {
