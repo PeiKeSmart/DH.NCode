@@ -45,10 +45,10 @@ internal class NovaDb : RemoteDb
         var server = builder["Server"];
         IsEmbedded = !dataSource.IsNullOrEmpty() && server.IsNullOrEmpty();
 
-        if (IsEmbedded)
+        if (IsEmbedded && !dataSource.IsNullOrEmpty())
         {
             // 嵌入模式下，解析文件路径作为数据库名
-            DatabaseName = dataSource;
+            DatabaseName = Path.GetFileName(dataSource);
         }
     }
 
@@ -158,7 +158,7 @@ internal class NovaDbSession : RemoteDbSession
         tableName = tableName.Trim().Trim('`', '`').Trim();
 
         var db = Database.DatabaseName;
-        var sql = $"select table_rows from information_schema.tables where table_schema='{db}' and table_name='{tableName}'";
+        var sql = $"select table_rows from _sys.tables where table_schema='{db}' and table_name='{tableName}'";
         return ExecuteScalar<Int64>(sql);
     }
 
@@ -167,7 +167,7 @@ internal class NovaDbSession : RemoteDbSession
         tableName = tableName.Trim().Trim('`', '`').Trim();
 
         var db = Database.DatabaseName;
-        var sql = $"select table_rows from information_schema.tables where table_schema='{db}' and table_name='{tableName}'";
+        var sql = $"select table_rows from _sys.tables where table_schema='{db}' and table_name='{tableName}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
 
@@ -280,6 +280,8 @@ internal class NovaDbMetaData : RemoteDbMetaData
 
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
+        var raw = base.OnGetTables(names);
+
         var ss = Database.CreateSession();
         var db = Database.DatabaseName;
         var list = new List<IDataTable>();

@@ -175,7 +175,7 @@ public partial class Log
     [DisplayName("详细信息")]
     [Description("详细信息")]
     [DataObjectField(false, false, true, 2000)]
-    [BindColumn("Remark", "详细信息", "")]
+    [BindColumn("Remark", "详细信息", "", ItemType = "html")]
     public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 

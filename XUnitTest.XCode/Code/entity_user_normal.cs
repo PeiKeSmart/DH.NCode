@@ -337,7 +337,7 @@ public partial class User
     [DisplayName("备注")]
     [Description("备注")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "备注", "")]
+    [BindColumn("Remark", "备注", "", ItemType = "html")]
     public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 

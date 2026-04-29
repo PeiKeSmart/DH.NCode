@@ -728,7 +728,8 @@ public static class EntityExtension
         var dal = session.Dal;
         if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
-        option.Columns ??= fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).Where(e => !e.Identity).ToArray();
+        // 批量Update需要主键参与构建Where子句，即使主键是自增列也要保留；仅排除非主键的自增列
+        option.Columns ??= fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).Where(e => !e.Identity || e.PrimaryKey).ToArray();
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
         if (option.UpdateColumns == null)
         {
