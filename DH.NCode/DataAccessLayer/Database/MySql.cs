@@ -570,6 +570,39 @@ internal class MySqlSession : RemoteDbSession
         return "[" + rs.Join(",") + "]";
     }
 
+    private static void WriteRoleBatchParameterDiagnostics(IDataTable table, IDataParameter[] parameters)
+    {
+        if (!table.TableName.EqualIgnoreCase("Role")) return;
+        if (parameters == null || parameters.Length == 0) return;
+
+        var enable = parameters.FirstOrDefault(e => e.ParameterName.EqualIgnoreCase("?Enable", "@Enable", "Enable"));
+        var isSystem = parameters.FirstOrDefault(e => e.ParameterName.EqualIgnoreCase("?IsSystem", "@IsSystem", "IsSystem"));
+        var viewSensitive = parameters.FirstOrDefault(e => e.ParameterName.EqualIgnoreCase("?ViewSensitive", "@ViewSensitive", "ViewSensitive"));
+
+        XTrace.WriteLine(
+            "Role批量更新参数值：Enable={0} IsSystem={1} ViewSensitive={2}",
+            FormatParameterValue(enable?.Value),
+            FormatParameterValue(isSystem?.Value),
+            FormatParameterValue(viewSensitive?.Value));
+    }
+
+    private static String FormatParameterValue(Object? value)
+    {
+        if (value == null) return "<null>";
+        if (value is Array arr)
+        {
+            var rs = new String[arr.Length];
+            for (var i = 0; i < arr.Length; i++)
+            {
+                rs[i] = arr.GetValue(i) + "";
+            }
+
+            return "[" + rs.Join(",") + "]";
+        }
+
+        return value + "";
+    }
+
     private static MethodInfo? _executeArrayBatch;
 
     /// <summary>批量更新，使用NewLife.MySql的数组参数绑定</summary>
@@ -591,6 +624,7 @@ internal class MySqlSession : RemoteDbSession
         var arr = list.ToArray();
         WriteRoleBatchDiagnostics(table, arr);
         var dps = GetArrayParameters(columns, ps, arr);
+        WriteRoleBatchParameterDiagnostics(table, dps);
         DefaultSpan.Current?.AppendTag(sql);
 
         using var cmd = OnCreateCommand(sql, CommandType.Text, dps);
