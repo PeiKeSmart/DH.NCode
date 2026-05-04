@@ -78,12 +78,12 @@ public class DbController
         if (rs == null) return null;
 
         //!!! ToPacket 暂时有问题，后续版本更新
-        //return rs.ToPacket();
+        return rs.ToPacket();
 
-        // 使用 Binary 格式序列化结果集，与 DbTable.Read(IPacket) 保持一致
-        var ms = new MemoryStream();
-        rs.Write(ms);
-        return ms.ToArray().AsPacket();
+        //// 使用 Binary 格式序列化结果集，与 DbTable.Read(IPacket) 保持一致
+        //var ms = new MemoryStream();
+        //rs.Write(ms);
+        //return ms.ToArray().AsPacket();
     }
 
     /// <summary>快速查询单表记录数</summary>
