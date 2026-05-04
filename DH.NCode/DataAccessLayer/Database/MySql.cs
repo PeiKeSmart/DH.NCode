@@ -545,6 +545,31 @@ internal class MySqlSession : RemoteDbSession
         return dps.ToArray();
     }
 
+    private static void WriteRoleBatchDiagnostics(IDataTable table, IModel[] list)
+    {
+        if (!table.TableName.EqualIgnoreCase("Role")) return;
+        if (list == null || list.Length == 0) return;
+
+        XTrace.WriteLine(
+            "Role批量更新原始值：ID={0} Enable={1} IsSystem={2} ViewSensitive={3}",
+            JoinModelValues(list, "ID"),
+            JoinModelValues(list, "Enable"),
+            JoinModelValues(list, "IsSystem"),
+            JoinModelValues(list, "ViewSensitive"));
+    }
+
+    private static String JoinModelValues(IModel[] list, String name)
+    {
+        var rs = new String[list.Length];
+        for (var i = 0; i < list.Length; i++)
+        {
+            var value = list[i][name];
+            rs[i] = value + "";
+        }
+
+        return "[" + rs.Join(",") + "]";
+    }
+
     private static MethodInfo? _executeArrayBatch;
 
     /// <summary>批量更新，使用NewLife.MySql的数组参数绑定</summary>
@@ -564,6 +589,7 @@ internal class MySqlSession : RemoteDbSession
         if (sql.IsNullOrEmpty()) return 0;
 
         var arr = list.ToArray();
+        WriteRoleBatchDiagnostics(table, arr);
         var dps = GetArrayParameters(columns, ps, arr);
         DefaultSpan.Current?.AppendTag(sql);
 
