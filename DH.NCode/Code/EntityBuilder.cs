@@ -170,13 +170,13 @@ public class EntityBuilder : ClassBuilder
         // 添加模型版本号，用于自动升级配置（2.0.2026.0130开始ChineseFileName默认为true）
         const String currentModelVersion = "2.0.2026.0130";
         var curVer = Version.Parse(currentModelVersion);
-
+        
         // 如果模型版本低于当前版本，则更新
         if (option.ModelVersion == null || option.ModelVersion < curVer)
         {
             option.ModelVersion = curVer;
         }
-
+        
         // 将版本号写入atts，用于保存到XML
         atts["ModelVersion"] = option.ModelVersion.ToString();
 
@@ -326,7 +326,7 @@ public class EntityBuilder : ClassBuilder
         try
         {
             var xml = File.ReadAllText(csprojPath);
-
+            
             // 查找 <PackageReference Include="NewLife.XCode" Version="..." />
             var match = Regex.Match(xml, @"<PackageReference\s+Include\s*=\s*[""']NewLife\.XCode[""']\s+Version\s*=\s*[""']([^""']+)[""']");
             if (match.Success) return match.Groups[1].Value;
@@ -359,7 +359,7 @@ public class EntityBuilder : ClassBuilder
         {
             // 目标版本：11.23.2026.127-beta0417
             var targetVersion = new Version(11, 23, 2026, 127);
-
+            
             // 解析版本号，去除beta后缀
             var versionStr = version;
             var dashIndex = versionStr.IndexOf('-');

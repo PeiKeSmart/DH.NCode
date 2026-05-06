@@ -22,9 +22,10 @@ public static class EntityExtension
     /// <returns></returns>
     public static IDictionary ToDictionary<T>(this IEnumerable<T> list, String? valueField = null) where T : IEntity
     {
-        if (list == null || !list.Any()) return new Dictionary<String, String>();
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return new Dictionary<String, String>();
 
-        var type = list.First().GetType();
+        var type = list2[0].GetType();
         var fact = type.AsFactory();
 
         // 构造主键类型和值类型
@@ -42,7 +43,7 @@ public static class EntityExtension
         var dic = typeof(Dictionary<,>).MakeGenericType(ktype, type).CreateInstance() as IDictionary;
         if (dic == null) throw new InvalidOperationException();
 
-        foreach (var item in list)
+        foreach (var item in list2)
         {
             var k = item[key.Name];
             if (!dic.Contains(k))
@@ -91,9 +92,10 @@ public static class EntityExtension
         if (session == null) throw new ArgumentNullException(nameof(session));
 
         var dps = new List<IDataParameter>();
-        if (list == null || !list.Any()) return dps.ToArray();
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return dps.ToArray();
 
-        var fact = list.First().GetType().AsFactory();
+        var fact = list2[0].GetType().AsFactory();
         //session ??= fact.Session;
         var db = session.Dal.Db;
 
@@ -101,7 +103,7 @@ public static class EntityExtension
         {
             if (item.Field != null)
             {
-                var vs = list.Select(e => e[item.Name]).ToArray();
+                var vs = list2.Select(e => e[item.Name]).ToArray();
                 dps.Add(db.CreateParameter(item.ColumnName ?? item.Name, vs, item.Field));
             }
         }
@@ -174,6 +176,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
+        // BatchUpdate 内部已处理：跳过无脏数据实体、Dirtys 并集取 UpdateColumns，无需在此分组
         return session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update) && array.Length > 1
             ? BatchUpdate(array.Valid(false), null, session)
             : DoAction(array, useTransition, e => e.Update(), session);
@@ -257,6 +260,8 @@ public static class EntityExtension
         var others = new List<T>();
         foreach (var item in list)
         {
+            if (item == null) continue;
+
             if (item.IsFromDatabase)
                 updates.Add(item);
             else
@@ -271,13 +276,15 @@ public static class EntityExtension
         // 没有其它唯一索引，且主键为空时，走批量插入
         var rs = 0;
         // 有唯一索引时，无法拆分为 Insert/Update，统一走 Upsert
-        var upserts = list;
+        var upserts = list.RemoveNull();
+        if (upserts.Count == 0) return 0;
+
         if (!session.DataTable.Indexes.Any(di => di.Unique))
         {
             var inserts = new List<T>();
             var updates = new List<T>();
             var upsertList = new List<T>();
-            foreach (var item in list)
+            foreach (var item in upserts)
             {
                 // 来自数据库，更新
                 if (item.IsFromDatabase)
@@ -333,6 +340,8 @@ public static class EntityExtension
             var sql = $"Delete From {session.FormatedTableName} Where ";
             foreach (var item in array)
             {
+                if (item == null) continue;
+
                 var val = item[pk.Name];
                 if (val == null) continue;
 
@@ -365,7 +374,7 @@ public static class EntityExtension
         if (array.Length == 0) return 0;
 
         // 避免列表内实体对象为空
-        var entity = array.First(e => e != null);
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         //var fact = entity.GetType().AsFactory();
@@ -431,7 +440,7 @@ public static class EntityExtension
             {
                 if (entity2.Valid(isNew ? DataMethod.Insert : DataMethod.Update)) rs.Add((T)item);
             }
-            else
+            else if (item != null)
                 rs.Add((T)item);
         }
 
@@ -448,13 +457,16 @@ public static class EntityExtension
     /// <returns>经过处理的数据列数组</returns>
     private static IDataColumn[] BuildInsertColumns<T>(IEntityFactory fact, IList<T> list, BatchOption option, Boolean includeIdentity = false) where T : IEntity
     {
+        if (list == null || list.Count == 0) return [];
+
         var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
+        var entity = list[0];
 
         if (!includeIdentity)
         {
             // 第一列数据包含非零自增，表示要插入自增值；否则排除自增列，让数据库自动填充
             var id = columns.FirstOrDefault(e => e.Identity);
-            if (id != null && list[0][id.Name].ToLong() == 0)
+            if (id != null && entity[id.Name].ToLong() == 0)
                 columns = columns.Where(e => !e.Identity).ToArray();
         }
 
@@ -493,8 +505,8 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchInsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (list2 == null || list2.Count == 0) return 0;
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
@@ -534,7 +546,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2[0]);
+            span?.SetError(ex, entity);
             throw;
         }
     }
@@ -565,8 +577,8 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (list2 == null || list2.Count == 0) return 0;
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
@@ -606,7 +618,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2[0]);
+            span?.SetError(ex, entity);
             throw;
         }
     }
@@ -637,8 +649,8 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchReplace<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (list2 == null || list2.Count == 0) return 0;
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
@@ -678,7 +690,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2[0]);
+            span?.SetError(ex, entity);
             throw;
         }
     }
@@ -715,8 +727,8 @@ public static class EntityExtension
     /// <returns></returns>
     public static Int32 BatchUpdate<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (list2 == null || list2.Count == 0) return 0;
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
@@ -730,29 +742,47 @@ public static class EntityExtension
 
         // 批量Update需要主键参与构建Where子句，即使主键是自增列也要保留；仅排除非主键的自增列
         option.Columns ??= fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).Where(e => !e.Identity || e.PrimaryKey).ToArray();
-        //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
-        if (option.UpdateColumns == null)
-        {
-            // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-            // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
-        }
-        var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
 
+        if (option.UpdateColumns == null)
+        {
+            // 直接遍历各实体 Dirtys 取并集，不使用 GetDirtyColumns（该方法含 IsFromDatabase 全字段逻辑，仅适用于 Insert 场景）
+            // 过滤掉无脏数据实体（与单体 e.Update() 行为一致：无脏数据则不执行 SQL，即使有 addColumns 累加字段也不例外）
+            // 同时收集所有实体的脏字段并集，作为 UpdateColumns
+            var dirtyNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            var filtered = new List<T>(list2.Count);
+            foreach (var e in list2)
+            {
+                var hasDirty = false;
+                foreach (var k in e.Dirtys)
+                {
+                    dirtyNames.Add(k);
+                    hasDirty = true;
+                }
+                if (hasDirty) filtered.Add(e);
+            }
+            list2 = filtered;
+
+            if (dirtyNames.Count > 0) option.UpdateColumns = dirtyNames.ToArray();
+        }
+        var updateColumns = option.UpdateColumns;
+
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
+        if (list2.Count == 0) return 0;
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
-        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
-        span?.AppendTag($"UpdateColumns: {updateColumns?.Join()}");
-        span?.AppendTag($"AddColumns: {addColumns.Join()}");
+        var csStr = option.Columns.Join(",", e => e.Name);
+        span?.AppendTag($"Columns: {csStr}");
+        var usStr = updateColumns?.Join();
+        if (!usStr.IsNullOrEmpty() && usStr != csStr)
+            span?.AppendTag($"UpdateColumns: {usStr}");
+        var asStr = addColumns?.Join();
+        if (!asStr.IsNullOrEmpty() && asStr != csStr)
+            span?.AppendTag($"AddColumns: {asStr}");
         try
         {
             var rs = 0;
@@ -774,7 +804,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2[0]);
+            span?.SetError(ex, entity);
             throw;
         }
     }
@@ -813,8 +843,8 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchUpsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (list2 == null || list2.Count == 0) return 0;
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
@@ -881,13 +911,16 @@ public static class EntityExtension
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
         if (option.UpdateColumns == null)
         {
-            // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-            // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
+            // 直接遍历各实体 Dirtys 取并集，与 BatchUpdate 保持一致
+            // Upsert 场景存在 Insert 分支，故此处不过滤无脏数据实体（已有主键的记录即使无脏字段也要参与 upsert）
+            var dirtyNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            foreach (var e in list2)
+            {
+                foreach (var k in e.Dirtys) dirtyNames.Add(k);
+            }
 
             // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
+            if (dirtyNames.Count > 0) option.UpdateColumns = dirtyNames.ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -898,7 +931,14 @@ public static class EntityExtension
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
-        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
+        var csStr = option.Columns.Join(",", e => e.Name);
+        span?.AppendTag($"Columns: {csStr}");
+        var usStr = updateColumns?.Join();
+        if (!usStr.IsNullOrEmpty() && usStr != csStr)
+            span?.AppendTag($"UpdateColumns: {usStr}");
+        var asStr = addColumns?.Join();
+        if (!asStr.IsNullOrEmpty() && asStr != csStr)
+            span?.AppendTag($"AddColumns: {asStr}");
         try
         {
             var rs = 0;
@@ -920,7 +960,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2[0]);
+            span?.SetError(ex, entity);
             throw;
         }
     }
@@ -981,7 +1021,7 @@ public static class EntityExtension
             }
             option.Columns = columns;
         }
-        option.UpdateColumns ??= entity.Dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).Distinct().ToArray();
+        option.UpdateColumns ??= entity.Dirtys.Where(e => !e.EqualIgnoreCase("CreateTime", "CreateUser", "CreateUserId")).Distinct().ToArray();
         option.AddColumns ??= fact.AdditionalFields;
 
         //dal.CheckDatabase();
@@ -1063,10 +1103,12 @@ public static class EntityExtension
         if (!type.IsInterface && type.As<IEntity>()) fact = type.AsFactory();
         foreach (var model in news)
         {
+            if (model == null) continue;
+
             if (fact == null && model is IEntity e) fact = e.GetType().AsFactory();
 
             // 查找已有数据中是否存在，已有的更新，没有的插入
-            var entity = source.FirstOrDefault(e => predicate(e, model));
+            var entity = source.FirstOrDefault(e => e != null && predicate(e, model));
             if (entity == null)
             {
                 entity = model as T;
@@ -1110,8 +1152,11 @@ public static class EntityExtension
     /// <returns></returns>
     public static IList<IDataColumn> GetDirtyColumns(this IEntityFactory fact, IEnumerable<IEntity> list)
     {
+        var list2 = list.RemoveNull();
+        if (list2.Count == 0) return [];
+
         // 任意实体来自数据库，则全部都是目标字段。因为有可能是从数据库查询出来的实体，然后批量插入
-        if (list.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Field).ToList();
+        if (list2.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Field).ToList();
 
         // 构建集合，已经标记为脏数据的字段不再搜索，减少循环次数
         var fields = fact.Fields.ToList();
@@ -1130,7 +1175,7 @@ public static class EntityExtension
         if (fields.Count > 0)
         {
             // 获取所有带有脏数据的字段
-            foreach (var entity in list)
+            foreach (var entity in list2)
             {
                 var tmps = new List<FieldItem>();
                 foreach (var fi in fields)
@@ -1188,6 +1233,8 @@ public static class EntityExtension
 
         foreach (var item in list)
         {
+            if (item == null) continue;
+
             var dr = new Object?[count];
             for (var i = 0; i < fs.Length; i++)
             {
@@ -1262,6 +1309,8 @@ public static class EntityExtension
         }
         foreach (var entity in list)
         {
+            if (entity == null) continue;
+
             csv.WriteLine(fields.Select(e => entity[e]));
 
             count++;
@@ -1428,7 +1477,7 @@ public static class EntityExtension
     public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : IEntity
     {
         var dt = new DataTable();
-        var entity = list.FirstOrDefault();
+        var entity = list.FirstOrDefault(e => e != null);
         if (entity == null) return dt;
 
         var fact = entity.GetType().AsFactory();
@@ -1452,6 +1501,8 @@ public static class EntityExtension
 
         foreach (var item in list)
         {
+            if (item == null) continue;
+
             var dr = dt.NewRow();
             foreach (var fi in fact.Fields)
             {
@@ -1514,13 +1565,36 @@ public static class EntityExtension
     /// <summary>转为列表。避免原始迭代被多次遍历</summary>
     /// <typeparam name="T">实体类型</typeparam>
     /// <param name="list">实体列表</param>
-    internal static IList<T> AsList<T>(this IEnumerable<T> list) => list is IList<T> list2 ? list2 : list.ToList();
+    internal static IList<T> AsList<T>(this IEnumerable<T> list)
+    {
+        if (list == null) return [];
+
+        return list is IList<T> list2 ? list2 : list.ToList();
+    }
+
+    /// <summary>过滤空实体。避免批量操作时因列表包含空元素导致异常</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <returns></returns>
+    internal static IList<T> RemoveNull<T>(this IEnumerable<T> list) where T : IEntity
+    {
+        var count = list is ICollection<T> collection ? collection.Count : 16;
+        var rs = new List<T>(count);
+        foreach (var item in list)
+        {
+            if (item != null) rs.Add(item);
+        }
+
+        return rs;
+    }
 
     /// <summary>转为数组。避免原始迭代被多次遍历</summary>
     /// <typeparam name="T">实体类型</typeparam>
     /// <param name="list">实体列表</param>
     internal static T[] AsArray<T>(this IEnumerable<T> list)
     {
+        if (list == null) return [];
+
         if (list is T[] array) return array;
         if (list is ICollection<T> collection) return collection.ToArray();
 

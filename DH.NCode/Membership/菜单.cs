@@ -76,7 +76,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("Url", "链接", "")]
+    [BindColumn("Url", "链接", "", ItemType = "url")]
     public String? Url { get => _Url; set { if (OnPropertyChanging("Url", value)) { _Url = value; OnPropertyChanged("Url"); } } }
 
     private Int32 _Sort;
@@ -275,7 +275,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     [DisplayName("备注")]
     [Description("备注")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "备注", "")]
+    [BindColumn("Remark", "备注", "", ItemType = "markdown")]
     public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
@@ -527,7 +527,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得菜单字段名称的快捷方式</summary>

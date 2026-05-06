@@ -255,7 +255,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [DisplayName("备注")]
     [Description("备注")]
     [DataObjectField(false, false, true, 500)]
-    [BindColumn("Remark", "备注", "")]
+    [BindColumn("Remark", "备注", "", ItemType = "html")]
     public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
@@ -591,7 +591,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得部门字段名称的快捷方式</summary>

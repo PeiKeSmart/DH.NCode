@@ -174,7 +174,7 @@ public partial class Log : ILog, IEntity<ILog>
     [DisplayName("详细信息")]
     [Description("详细信息")]
     [DataObjectField(false, false, true, 2000)]
-    [BindColumn("Remark", "详细信息", "")]
+    [BindColumn("Remark", "详细信息", "", ItemType = "html")]
     public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
@@ -394,7 +394,7 @@ public partial class Log : ILog, IEntity<ILog>
         /// <summary>详细信息</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得日志字段名称的快捷方式</summary>

@@ -99,7 +99,7 @@ public partial class TenantModel : IModel
                 case "Id": Id = value.ToInt(); break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
-                case "Type": Type = (XCode.Membership.TenantTypes)value; break;
+                case "Type": Type = (XCode.Membership.TenantTypes)value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "Level": Level = value.ToInt(); break;
                 case "ManagerId": ManagerId = value.ToInt(); break;

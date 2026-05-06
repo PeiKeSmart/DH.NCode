@@ -434,7 +434,6 @@ public partial class DAL
     private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        var setterCount = 0;
         //var db = (Database as DbBase)!;
 
         // 字段列表
@@ -447,22 +446,17 @@ public partial class DAL
             if (updateColumns != null && updateColumns.Contains(dc.Name) && (addColumns == null || !addColumns.Contains(dc.Name)))
             {
                 sb.AppendFormat("{0}={1},", Db.FormatName(dc), Db.FormatParameterName(dc.Name));
-                setterCount++;
 
                 if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
             }
             else if (addColumns != null && addColumns.Contains(dc.Name))
             {
                 sb.AppendFormat("{0}={0}+{1},", Db.FormatName(dc), Db.FormatParameterName(dc.Name));
-                setterCount++;
 
                 if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
             }
             //sb.Append(",");
         }
-
-        if (setterCount == 0) return String.Empty;
-
         sb.Length--;
         //sb.Append(")");
 

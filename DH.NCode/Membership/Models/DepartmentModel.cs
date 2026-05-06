@@ -142,7 +142,7 @@ public partial class DepartmentModel : IModel
             {
                 case "ID": ID = value.ToInt(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
-                case "Type": Type = (XCode.Membership.DepartmentTypes)value; break;
+                case "Type": Type = (XCode.Membership.DepartmentTypes)value.ToInt(); break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;

@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="Model202509"
-    targetNamespace="https://newlifex.com/Model202509.xsd"
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="Model202604"
+    targetNamespace="https://newlifex.com/Model202604.xsd"
     elementFormDefault="qualified"
-    xmlns="https://newlifex.com/Model202509.xsd"
-    xmlns:mstns="https://newlifex.com/Model202509.xsd"
+    xmlns="https://newlifex.com/Model202604.xsd"
+    xmlns:mstns="https://newlifex.com/Model202604.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:annotation>
@@ -326,6 +326,8 @@
       <xs:enumeration value="TDengine" ></xs:enumeration>
       <xs:enumeration value="KingBase" ></xs:enumeration>
       <xs:enumeration value="HighGo" ></xs:enumeration>
+      <xs:enumeration value="NovaDb" ></xs:enumeration>
+      <xs:enumeration value="Network" ></xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
 
@@ -532,7 +534,9 @@
       <xs:enumeration value="image" ></xs:enumeration>
       <xs:enumeration value="file" ></xs:enumeration>
       <xs:enumeration value="file-zip" ></xs:enumeration>
+      <xs:enumeration value="file-xls" ></xs:enumeration>
       <xs:enumeration value="html" ></xs:enumeration>
+      <xs:enumeration value="markdown" ></xs:enumeration>
       <xs:enumeration value="mail" ></xs:enumeration>
       <xs:enumeration value="mobile" ></xs:enumeration>
       <xs:enumeration value="phone" ></xs:enumeration>

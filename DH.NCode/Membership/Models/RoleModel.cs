@@ -138,11 +138,11 @@ public partial class RoleModel : IModel
             {
                 case "ID": ID = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
-                case "Type": Type = (XCode.Membership.RoleTypes)value; break;
+                case "Type": Type = (XCode.Membership.RoleTypes)value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "IsSystem": IsSystem = value.ToBoolean(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
-                case "DataScope": DataScope = (XCode.Membership.DataScopes)value; break;
+                case "DataScope": DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
                 case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
                 case "ViewSensitive": ViewSensitive = value.ToBoolean(); break;
                 case "Permission": Permission = Convert.ToString(value); break;

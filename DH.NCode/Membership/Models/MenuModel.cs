@@ -155,7 +155,7 @@ public partial class MenuModel : IModel
                 case "ID": ID = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "DisplayName": DisplayName = Convert.ToString(value); break;
-                case "Type": Type = (XCode.Membership.MenuTypes)value; break;
+                case "Type": Type = (XCode.Membership.MenuTypes)value.ToInt(); break;
                 case "FullName": FullName = Convert.ToString(value); break;
                 case "ParentID": ParentID = value.ToInt(); break;
                 case "Url": Url = Convert.ToString(value); break;
@@ -164,7 +164,7 @@ public partial class MenuModel : IModel
                 case "Visible": Visible = value.ToBoolean(); break;
                 case "Necessary": Necessary = value.ToBoolean(); break;
                 case "NewWindow": NewWindow = value.ToBoolean(); break;
-                case "DataScope": DataScope = (XCode.Membership.DataScopes)value; break;
+                case "DataScope": DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
                 case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Ex1": Ex1 = value.ToInt(); break;

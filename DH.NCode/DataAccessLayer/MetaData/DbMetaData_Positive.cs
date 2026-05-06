@@ -434,9 +434,8 @@ partial class DbMetaData
             }
         }
 
-        if (!Types.TryGetValue(type, out var ns))
-        {
-
+        if (!Types.TryGetValue(type, out var ns)) { 
+     
             return null;
         }
 
