@@ -3,7 +3,6 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1120,8 +1119,10 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         try
         {
             var sql = cmd.CommandText;
-            var previewSql = GetArrayBatchPreviewSql(cmd);
-            var usePreviewSql = !previewSql.IsNullOrEmpty();
+            var previewSql = cmd.ToString();
+            var usePreviewSql = !previewSql.IsNullOrEmpty() &&
+                previewSql != cmd.GetType().ToString() &&
+                previewSql != sql;
             if (usePreviewSql) sql = previewSql;
             var isInsert = sql.StartsWithIgnoreCase("Insert");
 
@@ -1177,150 +1178,6 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             return sql;
         }
         catch { return null; }
-    }
-
-    private String? GetArrayBatchPreviewSql(DbCommand cmd)
-    {
-        var sql = cmd.CommandText;
-        if (sql.IsNullOrEmpty()) return null;
-
-        var ps = cmd.Parameters;
-        if (ps == null || ps.Count == 0) return null;
-
-        var values = new Dictionary<String, Object?>(StringComparer.OrdinalIgnoreCase);
-        var hasArray = false;
-        var batchCount = 0;
-
-        for (var i = 0; i < ps.Count; i++)
-        {
-            if (ps[i] is not DbParameter dp) continue;
-
-            var value = dp.Value;
-            if (value is Array arr && value is not Byte[])
-            {
-                value = arr.Length > 0 ? arr.GetValue(0) : null;
-                hasArray = true;
-                if (arr.Length > batchCount) batchCount = arr.Length;
-            }
-            else if (value is IList list && value is not String)
-            {
-                value = list.Count > 0 ? list[0] : null;
-                hasArray = true;
-                if (list.Count > batchCount) batchCount = list.Count;
-            }
-
-            var parameterName = dp.ParameterName ?? String.Empty;
-            if (parameterName.IsNullOrEmpty()) continue;
-
-            values[parameterName] = value;
-
-            var cleanName = parameterName.TrimStart('@', '?');
-            if (!cleanName.IsNullOrEmpty()) values[cleanName] = value;
-        }
-
-        if (!hasArray) return null;
-
-        var previewSql = SubstitutePreviewParameters(sql, values);
-        if (batchCount > 1) previewSql += $" /* BatchPreview:1/{batchCount} */";
-
-        return previewSql;
-    }
-
-    private String SubstitutePreviewParameters(String sql, IDictionary<String, Object?> values)
-    {
-        if (sql.IsNullOrEmpty() || values.Count == 0) return sql;
-
-        var sb = Pool.StringBuilder.Get();
-        var i = 0;
-        while (i < sql.Length)
-        {
-            var ch = sql[i];
-            if (ch == '\'' || ch == '"')
-            {
-                AppendStringLiteral(sql, ref i, sb);
-                continue;
-            }
-
-            if (ch == '@' && i + 1 < sql.Length && sql[i + 1] == '@')
-            {
-                sb.Append('@');
-                sb.Append('@');
-                i += 2;
-                while (i < sql.Length && (Char.IsLetterOrDigit(sql[i]) || sql[i] == '_'))
-                {
-                    sb.Append(sql[i]);
-                    i++;
-                }
-                continue;
-            }
-
-            if (ch == '@' || ch == '?')
-            {
-                var start = i;
-                i++;
-                while (i < sql.Length && (Char.IsLetterOrDigit(sql[i]) || sql[i] == '_'))
-                    i++;
-
-                if (i > start + 1)
-                {
-                    var fullName = sql[start..i];
-                    var name = sql[(start + 1)..i];
-                    if (values.TryGetValue(fullName, out var value) || values.TryGetValue(name, out value))
-                    {
-                        sb.Append(SerializePreviewValue(value));
-                        continue;
-                    }
-                }
-
-                sb.Append(sql[start..i]);
-                continue;
-            }
-
-            sb.Append(ch);
-            i++;
-        }
-
-        return sb.Return(true);
-    }
-
-    private static void AppendStringLiteral(String sql, ref Int32 index, StringBuilder sb)
-    {
-        var quote = sql[index];
-        sb.Append(quote);
-        index++;
-
-        while (index < sql.Length)
-        {
-            var ch = sql[index];
-            sb.Append(ch);
-            index++;
-
-            if (ch != quote) continue;
-            if (index < sql.Length && sql[index] == quote)
-            {
-                sb.Append(sql[index]);
-                index++;
-                continue;
-            }
-            break;
-        }
-    }
-
-    private String SerializePreviewValue(Object? value)
-    {
-        if (value == null || value == DBNull.Value) return "NULL";
-
-        if (value is Char ch) return $"'{ch.ToString().Replace("'", "''")}'";
-
-        var db = (Database as DbBase)!;
-        var type = Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType();
-        if (type.IsEnum)
-        {
-            var underlyingType = Enum.GetUnderlyingType(type);
-            value = Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture);
-        }
-
-        return db.FormatValue(null!, value);
     }
 
     public String? WriteSQL(DbCommand cmd)
