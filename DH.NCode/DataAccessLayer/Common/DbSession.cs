@@ -1120,16 +1120,18 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         try
         {
             var sql = cmd.CommandText;
-            var previewSql = GetArrayBatchPreviewSql(cmd);
+            var previewSql = GetArrayBatchPreviewSql(cmd, out var previewState);
             var usePreviewSql = !previewSql.IsNullOrEmpty();
-            if (usePreviewSql) sql = previewSql;
+            if (usePreviewSql) sql = $"{previewSql} /* XCodePreview:{previewState} */";
             var isInsert = sql.StartsWithIgnoreCase("Insert");
+            var marker = String.Empty;
 
             // 诊断信息
             /*if (XTrace.Log.Level <= LogLevel.Debug)*/
             sql = $"[{Database.ConnName}] {sql}";
 
             var ps = cmd.Parameters;
+            if (ps != null && ps.Count > 0) marker = " /* XCodeGetSqlVNext */";
             if (!usePreviewSql && ps != null && ps.Count > 0)
             {
                 var sb = Pool.StringBuilder.Get();
@@ -1165,6 +1167,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     sb.AppendFormat("{0}={1}", ps[i].ParameterName, sv);
                 }
                 sb.Append(']');
+                if (!previewState.IsNullOrEmpty() && previewState.StartsWith("ArrayPreview", StringComparison.Ordinal))
+                    sb.Append($" /* XCodePreview:{previewState} */");
                 sql = sb.Return(true);
             }
 
@@ -1174,13 +1178,17 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 if (isInsert) sql = sql[..(max / 2)] + "......" + sql[^(max / 2)..];
             }
 
+            if (!marker.IsNullOrEmpty()) sql += marker;
+
             return sql;
         }
         catch { return null; }
     }
 
-    private String? GetArrayBatchPreviewSql(DbCommand cmd)
+    private String? GetArrayBatchPreviewSql(DbCommand cmd, out String previewState)
     {
+        previewState = String.Empty;
+
         var sql = cmd.CommandText;
         if (sql.IsNullOrEmpty()) return null;
 
@@ -1220,14 +1228,22 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         if (!hasArray) return null;
 
-        var previewSql = SubstitutePreviewParameters(sql, values);
+        var previewSql = SubstitutePreviewParameters(sql, values, out var matchCount);
+        if (matchCount <= 0)
+        {
+            previewState = $"ArrayPreviewMiss;Batch={batchCount};Matches=0";
+            return null;
+        }
+
+        previewState = $"ArrayPreviewHit;Batch={batchCount};Matches={matchCount}";
         if (batchCount > 1) previewSql += $" /* BatchPreview:1/{batchCount} */";
 
         return previewSql;
     }
 
-    private String SubstitutePreviewParameters(String sql, IDictionary<String, Object?> values)
+    private String SubstitutePreviewParameters(String sql, IDictionary<String, Object?> values, out Int32 matchCount)
     {
+        matchCount = 0;
         if (sql.IsNullOrEmpty() || values.Count == 0) return sql;
 
         var sb = Pool.StringBuilder.Get();
@@ -1267,6 +1283,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     var name = sql[(start + 1)..i];
                     if (values.TryGetValue(fullName, out var value) || values.TryGetValue(name, out value))
                     {
+                        matchCount++;
                         sb.Append(SerializePreviewValue(value));
                         continue;
                     }
