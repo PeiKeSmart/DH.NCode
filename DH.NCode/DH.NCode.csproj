@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>重构远程数据库服务并增强鉴权与测试覆盖；引入BatchCapability批量能力与TenantInterceptor；修复SqlServer类型映射与空表SetValue异常；修复KingBase SELECT列名引用问题；优化SQLite Truncate为Drop重建并增强全路径测试</PackageReleaseNotes>
+    <PackageReleaseNotes>新增表级反向工程模式并支持模型配置Migration；增强FieldExtension.Between区间查询并补齐单元测试；支持DbCommand.ToString直接预览SQL提升排障效率；优化批量Update与Upsert SQL生成并修复逗号拼接问题；批量累加字段支持快照差值与降级覆写；MySql参数支持Boolean数组自动转换为Int16数组；统一批量实体操作过滤空元素并增强链路追踪埋</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
