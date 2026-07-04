@@ -1,5 +1,4 @@
-﻿using NewLife;
-using NewLife.Collections;
+﻿using NewLife.Collections;
 using NewLife.Model;
 using NewLife.Security;
 
@@ -33,14 +32,14 @@ public interface IManageProvider : IServiceProvider
     /// <param name="context"></param>
     void SetCurrent(IManageUser? user, IServiceProvider context);
 
-    /// <summary>获取租户信息</summary>
-    /// <returns></returns>
-    Int32 GetTenant(IServiceProvider context);
+    ///// <summary>获取租户信息</summary>
+    ///// <returns></returns>
+    //Int32 GetTenant(IServiceProvider context);
 
-    /// <summary>设置租户</summary>
-    /// <param name="tenantId"></param>
-    /// <param name="context"></param>
-    void SetTenant(Int32 tenantId, IServiceProvider context);
+    ///// <summary>设置租户</summary>
+    ///// <param name="tenantId"></param>
+    ///// <param name="context"></param>
+    //void SetTenant(Int32 tenantId, IServiceProvider context);
 
     /// <summary>当前用户的所有租户</summary>
     /// <returns></returns>
@@ -166,14 +165,14 @@ public abstract class ManageProvider : IManageProvider
     /// <param name="context"></param>
     public abstract void SetCurrent(IManageUser? user, IServiceProvider? context = null);
 
-    /// <summary>获取当前用户租户</summary>
-    /// <returns></returns>
-    public abstract Int32 GetTenant(IServiceProvider context = null);
+    ///// <summary>获取当前用户租户</summary>
+    ///// <returns></returns>
+    //public abstract Int32 GetTenant(IServiceProvider context = null);
 
-    /// <summary>设置当前用户租户</summary>
-    /// <param name="tenantId"></param>
-    /// <param name="context"></param>
-    public abstract void SetTenant(Int32 tenantId, IServiceProvider context = null);
+    ///// <summary>设置当前用户租户</summary>
+    ///// <param name="tenantId"></param>
+    ///// <param name="context"></param>
+    //public abstract void SetTenant(Int32 tenantId, IServiceProvider context = null);
 
     /// <summary>根据用户编号查找</summary>
     /// <param name="userid"></param>
