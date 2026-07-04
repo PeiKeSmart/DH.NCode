@@ -1,6 +1,5 @@
-﻿#if NET6_0_OR_GREATER
+﻿using System.Collections;
 
-using System.Collections;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
@@ -55,4 +54,3 @@ public class XCodeQueryable<T> : IQueryable<T>, IOrderedQueryable<T>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     #endregion
 }
-#endif

@@ -1,10 +1,12 @@
-﻿#if NET6_0_OR_GREATER
-
-using System.Collections;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using NewLife;
 using NewLife.Reflection;
+
+using XCode.Configuration;
+
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
@@ -504,4 +506,3 @@ internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
     }
     #endregion
 }
-#endif
