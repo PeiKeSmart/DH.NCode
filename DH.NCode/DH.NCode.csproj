@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增表级反向工程模式并支持模型配置Migration；增强FieldExtension.Between区间查询并补齐单元测试；支持DbCommand.ToString直接预览SQL提升排障效率；优化批量Update与Upsert SQL生成并修复逗号拼接问题；批量累加字段支持快照差值与降级覆写；MySql参数支持Boolean数组自动转换为Int16数组；统一批量实体操作过滤空元素并增强链路追踪埋</PackageReleaseNotes>
+    <PackageReleaseNotes>新增 IQueryable LINQ 查询支持（EntityQueryable/EntityQueryProvider）；新增 WhereIf 内联条件与 FindAllWhereIf 实体级动态筛选；新增 Include(Type) 预加载关联实体缓存；新增 ClickHouse/DuckDB/MongoDB 数据库 Provider；新增窗口函数支持（SelectBuilder.Window + WindowFunction）；新增二级缓存分布式协调（CacheInvalidator.Provider 跨进程版本号机制）；完善 Linq/窗口函数/二级缓存单元测试；更新需求文档、竞品分析、模块清单</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
