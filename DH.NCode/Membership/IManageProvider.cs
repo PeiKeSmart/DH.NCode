@@ -17,8 +17,8 @@ public interface IManageProvider : IServiceProvider
     /// <summary>当前登录用户，设为空则注销登录</summary>
     IManageUser? Current { get; set; }
 
-    ///// <summary>当前租户。正在使用的租户</summary>
-    //ITenant Tenant { get; set; }
+    /// <summary>当前租户。正在使用的租户</summary>
+    ITenant Tenant { get; set; }
 
     /// <summary>密码提供者</summary>
     IPasswordProvider PasswordProvider { get; set; }
@@ -33,14 +33,14 @@ public interface IManageProvider : IServiceProvider
     /// <param name="context"></param>
     void SetCurrent(IManageUser? user, IServiceProvider context);
 
-    ///// <summary>获取租户信息</summary>
-    ///// <returns></returns>
-    //Int32 GetTenant(IServiceProvider context);
+    /// <summary>获取租户信息</summary>
+    /// <returns></returns>
+    Int32 GetTenant(IServiceProvider context);
 
-    ///// <summary>设置租户</summary>
-    ///// <param name="tenantId"></param>
-    ///// <param name="context"></param>
-    //void SetTenant(Int32 tenantId, IServiceProvider context);
+    /// <summary>设置租户</summary>
+    /// <param name="tenantId"></param>
+    /// <param name="context"></param>
+    void SetTenant(Int32 tenantId, IServiceProvider context);
 
     /// <summary>当前用户的所有租户</summary>
     /// <returns></returns>
@@ -138,8 +138,8 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>当前用户</summary>
     public virtual IManageUser? Current { get => GetCurrent(); set => SetCurrent(value); }
 
-    ///// <summary>当前租户。正在使用的租户</summary>
-    //public ITenant Tenant { get; set; }
+    /// <summary>当前租户。正在使用的租户</summary>
+    public ITenant Tenant { get; set; }
 
     /// <summary>当前用户的所有租户</summary>
     /// <returns></returns>
@@ -166,14 +166,14 @@ public abstract class ManageProvider : IManageProvider
     /// <param name="context"></param>
     public abstract void SetCurrent(IManageUser? user, IServiceProvider? context = null);
 
-    ///// <summary>获取当前用户租户</summary>
-    ///// <returns></returns>
-    //public abstract Int32 GetTenant(IServiceProvider context = null);
+    /// <summary>获取当前用户租户</summary>
+    /// <returns></returns>
+    public abstract Int32 GetTenant(IServiceProvider context = null);
 
-    ///// <summary>设置当前用户租户</summary>
-    ///// <param name="tenantId"></param>
-    ///// <param name="context"></param>
-    //public abstract void SetTenant(Int32 tenantId, IServiceProvider context = null);
+    /// <summary>设置当前用户租户</summary>
+    /// <param name="tenantId"></param>
+    /// <param name="context"></param>
+    public abstract void SetTenant(Int32 tenantId, IServiceProvider context = null);
 
     /// <summary>根据用户编号查找</summary>
     /// <param name="userid"></param>
