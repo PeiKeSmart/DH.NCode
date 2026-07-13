@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NewLife.Log;
 using XCode.Services;
 using Xunit;

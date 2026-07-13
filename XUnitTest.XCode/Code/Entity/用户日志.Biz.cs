@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -38,8 +38,8 @@ public partial class UserLog : Entity<UserLog>
         // 按月分表
         Meta.ShardPolicy = new TimeShardPolicy(nameof(DataTime), Meta.Factory)
         {
-            TablePolicy = "{0}_{1:yyMM}",
-            Step = TimeSpan.FromDays(30),
+                TablePolicy = "{0}_{1:yyMM}",
+                Step = TimeSpan.FromDays(30),
         };
 
         // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor

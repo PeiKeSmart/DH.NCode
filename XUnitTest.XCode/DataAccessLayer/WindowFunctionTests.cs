@@ -1,7 +1,5 @@
-﻿using System;
-
+using System;
 using XCode.DataAccessLayer;
-
 using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
