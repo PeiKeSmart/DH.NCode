@@ -34,10 +34,10 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="4.22.2026.516-beta0636" />
-    <PackageReference Include="DH.NRemoting" Version="4.21.2026.516-beta0624" />
-    <PackageReference Include="DH.NStardust" Version="4.21.2026.326-beta0835" />
-    <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
+    <PackageReference Include="DH.NRedis" Version="4.24.2026.708-beta0444" />
+    <PackageReference Include="DH.NRemoting" Version="4.24.2026.708-beta0416" />
+    <PackageReference Include="DH.NStardust" Version="4.24.2026.707-beta1531" />
+    <PackageReference Include="SourceGear.sqlite3" Version="3.53.3" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
   </ItemGroup>
   <ItemGroup>

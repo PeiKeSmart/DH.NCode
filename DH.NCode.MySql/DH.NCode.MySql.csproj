@@ -42,7 +42,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.MySql" Version="4.24.2026.704-beta0250" />
+    <PackageReference Include="DH.MySql" Version="4.24.2026.707-beta1325" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DH.NCode\DH.NCode.csproj" />
