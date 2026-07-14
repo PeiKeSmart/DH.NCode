@@ -73,7 +73,7 @@
     <None Remove="Web\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="DataAccessLayer\Common\ConnectionPool.cs" />
+
     <Compile Remove="DataAccessLayer\Database\Firebird.cs" />
     <Compile Remove="DataAccessLayer\Model\SerializableDataMember.cs" />
     <Compile Remove="DataAccessLayer\MSPageSplit.cs" />
@@ -114,6 +114,6 @@
     <Content Include="..\.github\instructions\xcode.instructions.md" Pack="true" PackagePath="content\.github\instructions\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DH.NCore" Version="4.24.2026.713-beta1236" />
+    <PackageReference Include="DH.NCore" Version="4.24.2026.714-beta1242" />
   </ItemGroup>
 </Project>
