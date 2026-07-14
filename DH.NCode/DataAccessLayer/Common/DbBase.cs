@@ -143,9 +143,13 @@ abstract class DbBase : DisposeBase, IDatabase
 
     protected internal String _ConnectionString = null!;
     /// <summary>链接字符串</summary>
+    /// <remarks>
+    /// getter 返回经 <see cref="OnGetConnectionString"/> 处理后的完整连接字符串（如 MySQL 8.0+ 的 AllowPublicKeyRetrieval），
+    /// 确保所有代码路径（包括 <see cref="RemoteDbSession.ProcessWithSystem"/>）使用一致的驱动特定参数，避免连接失败。
+    /// </remarks>
     public virtual String ConnectionString
     {
-        get => _ConnectionString;
+        get => GetConnectionString();
         set
         {
 #if DEBUG
