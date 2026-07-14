@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,6 @@ using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Model;
-
 using Xunit;
 
 namespace XUnitTest.XCode.Entity;

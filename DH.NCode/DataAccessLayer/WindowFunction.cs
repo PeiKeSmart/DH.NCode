@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 
 namespace XCode.DataAccessLayer;
 
