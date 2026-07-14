@@ -275,23 +275,29 @@ namespace XCode.DataAccessLayer
             { typeof(String), new String[] { "NVARCHAR({0})", "TEXT", "CHAR({0})", "NCHAR({0})", "VARCHAR({0})", "SET", "ENUM", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT" } }
         };
 
-        #region DDL 执行方法
-        /// <summary>建立数据库（Firebird 使用原生 API 创建）</summary>
-        /// <param name="databaseName">数据库名，忽略</param>
-        /// <param name="file">数据文件路径，忽略</param>
-        /// <returns>是否成功</returns>
-        public override Boolean CreateDatabase(String databaseName, String? file = null)
+        #region 架构定义
+        protected override void CreateDatabase()
         {
-            if (String.IsNullOrEmpty(FileName) || File.Exists(FileName)) return true;
+            //base.CreateDatabase();
+
+            if (String.IsNullOrEmpty(FileName) || File.Exists(FileName)) return;
+
+            //The miminum you must specify:
+
+            //Hashtable parameters = new Hashtable();
+            //parameters.Add("User", "SYSDBA");
+            //parameters.Add("Password", "masterkey");
+            //parameters.Add("Database", @"c:\database.fdb");
+            //FbConnection.CreateDatabase(parameters);
 
             DAL.WriteLog("创建数据库：{0}", FileName);
 
             var conn = Database.Factory.CreateConnection();
+            //var method = Reflect.GetMethodEx(conn.GetType(), "CreateDatabase", typeof(String));
             var method = conn.GetType().GetMethodEx("CreateDatabase", typeof(String));
-            if (method == null) return false;
+            if (method == null) return;
 
             Reflect.Invoke(null, method, Database.ConnectionString);
-            return true;
         }
 
         public override String CreateDatabaseSQL(String dbname, String file)

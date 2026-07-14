@@ -336,7 +336,7 @@ public class SQLiteTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().DropTable(table);
+        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         //Thread.Sleep(10000);
 
@@ -353,13 +353,13 @@ public class SQLiteTests
 
         var meta = dal.Db.CreateMetaData();
 
-        var file = meta.BackupDatabase();
+        var file = meta.SetSchema(DDLSchema.BackupDatabase) as String;
         Assert.NotEmpty(file);
         Assert.True(File.Exists(file));
         File.Delete(file);
 
         file = $"bak_{Rand.NextString(8)}.db";
-        var file2 = meta.BackupDatabase(backupFile: file);
+        var file2 = meta.SetSchema(DDLSchema.BackupDatabase, file) as String;
         Assert.Equal(file, Path.GetFileName(file2));
         Assert.True(File.Exists(file2));
         File.Delete(file2);
@@ -373,8 +373,8 @@ public class SQLiteTests
 
         var meta = dal.Db.CreateMetaData();
 
-        var rs = meta.CompactDatabase();
-        Assert.True(rs);
+        var rs = meta.SetSchema(DDLSchema.CompactDatabase);
+        Assert.Equal(0, rs);
     }
 
     [Fact]

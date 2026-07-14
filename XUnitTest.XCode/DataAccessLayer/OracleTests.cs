@@ -134,7 +134,7 @@ public class OracleTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().DropTable(table);
+        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());

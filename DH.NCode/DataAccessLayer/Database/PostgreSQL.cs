@@ -631,10 +631,8 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
-    public override Boolean DatabaseExist(String? databaseName)
+    protected override Boolean DatabaseExist(String databaseName)
     {
-        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
-
         //return base.DatabaseExist(databaseName);
 
         var session = Database.CreateSession();

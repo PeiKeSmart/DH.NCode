@@ -3,18 +3,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Serialization;
-
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
-
+using XCode.Model;
 using Xunit;
-
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -415,7 +412,7 @@ public class MySqlTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().DropTable(table);
+        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
@@ -482,7 +479,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=MyISAM", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().DropTable(table);
+            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         dal.SetTables(table);
 
@@ -510,7 +507,7 @@ public class MySqlTests
         Assert.Contains(" KEY_BLOCK_SIZE=4", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().DropTable(table);
+            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         dal.SetTables(table);
 
@@ -547,7 +544,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=Archive", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().DropTable(table);
+            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
 
         dal.SetTables(table);
 
@@ -833,6 +830,45 @@ public class MySqlTests
 
         var all2 = Role2.FindAll();
         Assert.All(all2, r => Assert.StartsWith("updated_", r.Remark));
+    }
+
+    [Fact(DisplayName = "BatchUpdate — 指定不存在更新列时安全返回0，不生成非法SQL")]
+    public void BatchUpdate_WithUnknownColumns_ReturnsZero()
+    {
+        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
+        DAL.AddConnStr("Membership_Batch_mysql_unknown", connStr, null, "MySql");
+        var dal = DAL.Create("Membership_Batch_mysql_unknown");
+        var db = (dal.Db as MySql)!;
+
+        if (!db.IsNewLifeDriver)
+        {
+            XTrace.WriteLine("当前未加载NewLife.MySql驱动，跳过BatchUpdate集成测试");
+            return;
+        }
+
+        using var split = CreateForBatch("Update_UnknownColumns");
+
+        var list = new List<Role2>
+        {
+            new Role2 { Name = "管理员" },
+            new Role2 { Name = "高级用户" }
+        };
+        var rs = list.BatchInsert();
+        Assert.Equal(list.Count, rs);
+
+        var all = Role2.FindAll();
+        Assert.Equal(list.Count, all.Count);
+
+        rs = all.BatchUpdate(new BatchOption
+        {
+            UpdateColumns = ["NotExists"],
+            AddColumns = []
+        });
+
+        Assert.Equal(0, rs);
+
+        var all2 = Role2.FindAll();
+        Assert.All(all2, r => Assert.Null(r.Remark));
     }
 
     [Fact(DisplayName = "QueryModelsAsync — 直接映射模型列表，跳过DbTable中间层")]
