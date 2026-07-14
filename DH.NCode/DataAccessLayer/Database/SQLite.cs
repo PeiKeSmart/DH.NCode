@@ -774,39 +774,39 @@ internal class SQLiteMetaData : FileDbMetaData
     }
     #endregion
 
-    #region DDL 执行方法
-    /// <summary>备份数据库</summary>
-    /// <param name="dbName">数据库名</param>
-    /// <param name="backupFile">备份文件</param>
-    /// <returns>备份文件路径</returns>
-    public override String? BackupDatabase(String? dbName = null, String? backupFile = null)
+    #region 数据定义
+    public override Object? SetSchema(DDLSchema schema, params Object?[] values)
     {
-        var dbname = FileName;
-        if (!dbname.IsNullOrEmpty()) dbname = Path.GetFileNameWithoutExtension(dbname);
+        {
+            var db = (Database as DbBase)!;
+            var tracer = db.Tracer;
+            if (schema is not DDLSchema.BackupDatabase) tracer = null;
+            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
-        return Backup(dbname!, backupFile, false);
+            switch (schema)
+            {
+                case DDLSchema.BackupDatabase:
+                    var dbname = FileName;
+                    if (!dbname.IsNullOrEmpty()) dbname = Path.GetFileNameWithoutExtension(dbname);
+                    var file = "";
+                    if (values != null && values.Length > 0) file = values[0] as String;
+                    return Backup(dbname!, file, false);
+
+                default:
+                    break;
+            }
+        }
+        return base.SetSchema(schema, values);
     }
-    #endregion
 
-    /// <summary>建立数据库。内存数据库跳过文件创建</summary>
-    /// <param name="databaseName">数据库名</param>
-    /// <param name="file">数据文件路径</param>
-    /// <returns>是否成功</returns>
-    public override Boolean CreateDatabase(String databaseName, String? file = null)
+    protected override void CreateDatabase()
     {
-        if ((Database as SQLite)!.IsMemoryDatabase) return true;
-
-        return base.CreateDatabase(databaseName, file);
+        if (!(Database as SQLite)!.IsMemoryDatabase) base.CreateDatabase();
     }
 
-    /// <summary>删除数据库。内存数据库跳过文件删除</summary>
-    /// <param name="databaseName">数据库名</param>
-    /// <returns>是否成功</returns>
-    public override Boolean DropDatabase(String databaseName)
+    protected override void DropDatabase()
     {
-        if ((Database as SQLite)!.IsMemoryDatabase) return true;
-
-        return base.DropDatabase(databaseName);
+        if (!(Database as SQLite)!.IsMemoryDatabase) base.DropDatabase();
     }
 
     /// <summary>备份文件到目标文件</summary>
@@ -1009,6 +1009,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
         return "";
     }
+    #endregion
 
     #region 表和字段备注
     /// <summary>添加描述</summary>

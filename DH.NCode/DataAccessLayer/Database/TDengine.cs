@@ -372,10 +372,8 @@ class TDengineMetaData : RemoteDbMetaData
     #endregion
 
     #region 反向工程
-    public override Boolean DatabaseExist(String? databaseName)
+    protected override Boolean DatabaseExist(String databaseName)
     {
-        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
-
         var ss = Database.CreateSession();
         var sql = $"SHOW DATABASES";
         var dt = ss.Query(sql, null);

@@ -1,4 +1,5 @@
-using System.Collections;
+﻿using System.Collections;
+
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;

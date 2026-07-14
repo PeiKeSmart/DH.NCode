@@ -38,8 +38,8 @@ public partial class ExpressLogs : Entity<ExpressLogs>
         // 按年分表
         Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
         {
-                TablePolicy = "{0}_{1:yyyy}",
-                Step = TimeSpan.FromDays(365),
+            TablePolicy = "{0}_{1:yyyy}",
+            Step = TimeSpan.FromDays(365),
         };
 
         // 过滤器 UserModule、TimeModule、IPModule

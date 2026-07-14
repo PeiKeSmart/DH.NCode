@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;

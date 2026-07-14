@@ -1,6 +1,9 @@
 ﻿using NewLife.Log;
+
 using XCode.Configuration;
+
 using Xunit;
+
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.Configuration;

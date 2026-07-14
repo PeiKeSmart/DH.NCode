@@ -546,10 +546,8 @@ internal class HanaMetaData : RemoteDbMetaData
 
     #region 反向工程
 
-    public override Boolean DatabaseExist(String? databaseName)
+    protected override Boolean DatabaseExist(String databaseName)
     {
-        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
-
         var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }

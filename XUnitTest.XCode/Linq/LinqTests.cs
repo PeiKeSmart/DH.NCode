@@ -61,7 +61,8 @@ public class LinqTests : IDisposable
 
     // ====== 4. 表达式解析验证（用 Parse 方法不执行数据库） ======
 
-    [Fact] public void Parse_Where_Equals()
+    [Fact]
+    public void Parse_Where_Equals()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Where(r => r.ID > 0).Expression);
@@ -70,7 +71,8 @@ public class LinqTests : IDisposable
         Assert.Contains("ID>0", v.WhereExpression.ToString());
     }
 
-    [Fact] public void Parse_Where_String()
+    [Fact]
+    public void Parse_Where_String()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Where(r => r.Name == "Admin").Expression);
@@ -78,49 +80,56 @@ public class LinqTests : IDisposable
         Assert.Contains("Name='Admin'", v.WhereExpression.ToString());
     }
 
-    [Fact] public void Parse_OrderBy_Asc()
+    [Fact]
+    public void Parse_OrderBy_Asc()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.OrderBy(r => r.ID).Expression);
         Assert.Equal("ID", v.OrderBy);
     }
 
-    [Fact] public void Parse_OrderBy_Desc()
+    [Fact]
+    public void Parse_OrderBy_Desc()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.OrderByDescending(r => r.ID).Expression);
         Assert.Equal("ID desc", v.OrderBy);
     }
 
-    [Fact] public void Parse_ThenBy()
+    [Fact]
+    public void Parse_ThenBy()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.OrderBy(r => r.ID).ThenBy(r => r.Name).Expression);
         Assert.Equal("ID,Name", v.OrderBy);
     }
 
-    [Fact] public void Parse_ThenByDescending()
+    [Fact]
+    public void Parse_ThenByDescending()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.OrderBy(r => r.ID).ThenByDescending(r => r.Name).Expression);
         Assert.Equal("ID,Name desc", v.OrderBy);
     }
 
-    [Fact] public void Parse_Skip()
+    [Fact]
+    public void Parse_Skip()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Skip(15).Expression);
         Assert.Equal(15, v.Skip);
     }
 
-    [Fact] public void Parse_Take()
+    [Fact]
+    public void Parse_Take()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Take(25).Expression);
         Assert.Equal(25, v.Take);
     }
 
-    [Fact] public void Parse_Skip_Take()
+    [Fact]
+    public void Parse_Skip_Take()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Skip(5).Take(10).Expression);
@@ -128,7 +137,8 @@ public class LinqTests : IDisposable
         Assert.Equal(10, v.Take);
     }
 
-    [Fact] public void Parse_Count()
+    [Fact]
+    public void Parse_Count()
     {
         var q = Role.Query.Where(r => r.ID > 0);
         var countExpr = LinqExpr.Call(
@@ -137,7 +147,8 @@ public class LinqTests : IDisposable
         Assert.True(v.IsCount);
     }
 
-    [Fact] public void Parse_FirstOrDefault()
+    [Fact]
+    public void Parse_FirstOrDefault()
     {
         var q = Role.Query;
         var expr = LinqExpr.Call(
@@ -148,7 +159,8 @@ public class LinqTests : IDisposable
         Assert.Equal(1, v.Take);
     }
 
-    [Fact] public void Parse_Single()
+    [Fact]
+    public void Parse_Single()
     {
         var q = Role.Query.Where(r => r.ID == 1);
         var expr = LinqExpr.Call(
@@ -159,7 +171,8 @@ public class LinqTests : IDisposable
         Assert.Equal(2, v.Take);
     }
 
-    [Fact] public void Parse_SingleOrDefault()
+    [Fact]
+    public void Parse_SingleOrDefault()
     {
         var q = Role.Query;
         var expr = LinqExpr.Call(
@@ -169,7 +182,8 @@ public class LinqTests : IDisposable
         Assert.False(v.ThrowIfNotFound);
     }
 
-    [Fact] public void Parse_Complex()
+    [Fact]
+    public void Parse_Complex()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.Where(r => r.ID > 0).OrderByDescending(r => r.Name).Skip(5).Take(10).Expression);
@@ -179,7 +193,8 @@ public class LinqTests : IDisposable
         Assert.Equal(10, v.Take);
     }
 
-    [Fact] public void Parse_NoWhere_OrderBy()
+    [Fact]
+    public void Parse_NoWhere_OrderBy()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
             Role.Query.OrderBy(r => r.ID).Expression);
@@ -198,7 +213,8 @@ public class LinqTests : IDisposable
 
     [Fact] public void Include_Null_Throws() => Assert.Throws<ArgumentNullException>(() => Role.Query.Include(null));
     [Fact] public void Include_ReturnsSameType() { var q = Role.Query.Include(typeof(Role)); Assert.IsType<EntityQueryable<Role>>(q); }
-    [Fact] public void Include_RegistersInProvider()
+    [Fact]
+    public void Include_RegistersInProvider()
     {
         var p = new EntityQueryProvider(Role.Meta.Factory);
         var q = new EntityQueryable<Role>(p);
@@ -212,7 +228,8 @@ public class LinqTests : IDisposable
     [Fact] public void FindAllWhereIf_NotNull() => Assert.NotNull(Role.FindAllWhereIf());
     [Fact] public void FindAllWhereIf_Empty() => Assert.NotNull(Role.FindAllWhereIf());
     [Fact] public void FindAllWhereIf_AllDisabled() => Assert.NotNull(Role.FindAllWhereIf((false, Role._.ID > 0)));
-    [Fact] public void FindAllWhereIf_MultipleMixed()
+    [Fact]
+    public void FindAllWhereIf_MultipleMixed()
     {
         var list = Role.FindAllWhereIf(
             (true, Role._.ID >= 0),
@@ -227,7 +244,8 @@ public class LinqTests : IDisposable
     [Fact] public void Provider_Ctor_NotNull() { var p = new EntityQueryProvider(Role.Meta.Factory); Assert.NotNull(p); }
     [Fact] public void Provider_Factory() { var p = new EntityQueryProvider(Role.Meta.Factory); Assert.Same(Role.Meta.Factory, p.Factory); Assert.Same(Role.Meta.Session, p.Session); }
     [Fact] public void Provider_CreateQuery_Null_Throws() { var p = new EntityQueryProvider(Role.Meta.Factory); Assert.Throws<ArgumentNullException>(() => p.CreateQuery<Role>(null)); }
-    [Fact] public void Provider_CreateQuery_NonGeneric()
+    [Fact]
+    public void Provider_CreateQuery_NonGeneric()
     {
         var p = new EntityQueryProvider(Role.Meta.Factory);
         var q = p.CreateQuery(System.Linq.Expressions.Expression.Constant(null, typeof(IQueryable<Role>)));
@@ -235,7 +253,8 @@ public class LinqTests : IDisposable
         Assert.IsAssignableFrom<IQueryable>(q);
     }
     [Fact] public void Provider_Execute_Null_Throws() { var p = new EntityQueryProvider(Role.Meta.Factory); Assert.Throws<ArgumentNullException>(() => p.Execute<Object>(null)); }
-    [Fact] public void Provider_Execute_ToList_ReturnsList()
+    [Fact]
+    public void Provider_Execute_ToList_ReturnsList()
     {
         var p = new EntityQueryProvider(Role.Meta.Factory);
         var q = p.CreateQuery<Role>(System.Linq.Expressions.Expression.Constant(null));
@@ -244,149 +263,4 @@ public class LinqTests : IDisposable
     }
     [Fact] public void Provider_AddInclude_Null_Ok() { new EntityQueryProvider(Role.Meta.Factory).AddInclude(null); }
     [Fact] public void Provider_AddInclude_Duplicate_Ok() { var p = new EntityQueryProvider(Role.Meta.Factory); p.AddInclude(typeof(Role)); p.AddInclude(typeof(Role)); }
-
-    // ====== 9. EntityQueryProvider 连接名注入 ======
-
-    [Fact] public void Provider_Ctor_WithConnName()
-    {
-        var p = new EntityQueryProvider(Role.Meta.Factory, "TestConn");
-        Assert.NotNull(p);
-        Assert.Same(Role.Meta.Factory, p.Factory);
-    }
-
-    [Fact] public void Provider_Ctor_WithConnName_Null()
-    {
-        var p = new EntityQueryProvider(Role.Meta.Factory, null!);
-        Assert.NotNull(p);
-    }
-
-    // ====== 10. DAL.Select<T>() ======
-
-    [Fact]
-    public void DAL_Select_ReturnsQueryable()
-    {
-        var dal = DAL.Create(_connName);
-        var q = dal.Select<Role>();
-        Assert.NotNull(q);
-        Assert.IsType<EntityQueryable<Role>>(q);
-    }
-
-    [Fact]
-    public void DAL_Select_WhereIf_ToList()
-    {
-        var dal = DAL.Create(_connName);
-        var list = dal.Select<Role>()
-            .WhereIf(true, r => r.ID >= 0)
-            .WhereIf(false, r => r.Name == "ignored")
-            .ToList();
-        Assert.NotNull(list);
-    }
-
-    [Fact]
-    public void DAL_Select_WhereIf_False_ReturnsAll()
-    {
-        var dal = DAL.Create(_connName);
-        // 所有 WhereIf 条件均为 false，应返回全部记录
-        var listAll = dal.Select<Role>().ToList();
-        var listFiltered = dal.Select<Role>()
-            .WhereIf(false, r => r.ID > 999999)
-            .WhereIf(false, r => r.Name!.Contains("notexist"))
-            .ToList();
-        Assert.Equal(listAll.Count, listFiltered.Count);
-    }
-
-    [Fact]
-    public void DAL_Select_OrderByDescending()
-    {
-        var dal = DAL.Create(_connName);
-        var list = dal.Select<Role>()
-            .Where(r => r.ID >= 0)
-            .OrderByDescending(r => r.ID)
-            .ToList();
-        Assert.NotNull(list);
-        // 验证降序排列：每对相邻元素，前者 ID >= 后者 ID
-        for (var i = 1; i < list.Count; i++)
-        {
-            Assert.True(list[i - 1].ID >= list[i].ID);
-        }
-    }
-
-    [Fact]
-    public void DAL_Select_Page()
-    {
-        var dal = DAL.Create(_connName);
-        var list = dal.Select<Role>()
-            .Where(r => r.ID >= 0)
-            .OrderBy(r => r.ID)
-            .Page(1, 10)
-            .ToList();
-        Assert.NotNull(list);
-        Assert.True(list.Count <= 10);
-    }
-
-    [Fact]
-    public void DAL_Select_Page_InvalidPage_Throws()
-    {
-        var dal = DAL.Create(_connName);
-        var q = dal.Select<Role>();
-        Assert.Throws<ArgumentOutOfRangeException>(() => q.Page(0, 10));
-    }
-
-    [Fact]
-    public void DAL_Select_Count()
-    {
-        var dal = DAL.Create(_connName);
-        // 插入测试数据
-        var count = dal.Select<Role>().Count();
-        Assert.True(count >= 0);
-    }
-
-    [Fact]
-    public void DAL_Select_FirstOrDefault()
-    {
-        var dal = DAL.Create(_connName);
-        var entity = dal.Select<Role>().Where(r => r.ID >= 0).OrderBy(r => r.ID).FirstOrDefault();
-        // 可能为 null（表为空），但不抛异常
-    }
-
-    [Fact]
-    public void DAL_Select_UsesDALConnection()
-    {
-        // 核心验证：DAL.Select<T>() 能查到刚插入的数据
-        var r = new Role { Name = "DalSelectTest", Enable = true };
-        r.Insert();
-        var insertedId = r.ID;
-
-        // 控制组：XCode 原生 Expression 查询
-        var controlList = Role.FindAll(Role._.ID == insertedId);
-        Assert.Single(controlList);
-
-        // 实验组：DAL.Select<T>().Where 使用 LINQ 表达式
-        var dal = DAL.Create(_connName);
-        var list = dal.Select<Role>().Where(e => e.ID == insertedId).ToList();
-        Assert.Single(list);
-        Assert.Equal("DalSelectTest", list[0].Name);
-    }
-
-    [Fact]
-    public void Role_Query_Where_FindsInsertedData()
-    {
-        // 验证基础 LINQ 查询能否找到刚插入的数据
-        var r = new Role { Name = "QueryTest", Enable = true };
-        r.Insert();
-        var id = r.ID;
-
-        // Role.FindAll（原生 Expression）应该能找到
-        var nativeList = Role.FindAll(Role._.ID == id);
-        Assert.Single(nativeList);
-
-        // Role.Query.Where（LINQ）也应该能找到
-        var linqList = Role.Query.Where(e => e.ID == id).ToList();
-        Assert.Single(linqList);
-    }
-
-    private static void TryDelete(String filePath)
-    {
-        try { if (File.Exists(filePath)) File.Delete(filePath); } catch { }
-    }
 }

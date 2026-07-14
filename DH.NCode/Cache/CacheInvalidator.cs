@@ -1,4 +1,4 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Caching;
 using NewLife.Log;
 using XCode.DataAccessLayer;
