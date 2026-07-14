@@ -136,12 +136,16 @@ abstract class RemoteDbSession : DbSession
         if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname) && !sysdbname.IsNullOrEmpty())
         {
             Log?.Info("切换到系统库[{0}]", sysdbname);
-            using var conn = Database.Factory.CreateConnection();
             try
             {
-                //conn.ConnectionString = Database.ConnectionString;
+                // 通过 OpenConnection 获取已正确处理的连接（含 OnGetConnectionString 加工），
+                // 然后用驱动自身的 ChangeDatabase 切换数据库，避免 XCode 的 ConnectionStringBuilder
+                // 解析重建连接字符串时可能产生的格式问题。
+                using var conn = Database.OpenConnection();
 
-                OpenDatabase(conn, Database.ConnectionString, sysdbname);
+                // 切换到系统数据库。MySqlConnection.ChangeDatabase 会关闭连接、
+                // 修改 Setting.Database 后再重新打开，确保连接池使用正确的连接字符串
+                conn.ChangeDatabase(sysdbname);
 
                 return callback(this, conn);
             }
@@ -160,31 +164,6 @@ abstract class RemoteDbSession : DbSession
             using var conn = Database.OpenConnection();
             return callback(this, conn);
         }
-    }
-
-    private static void OpenDatabase(IDbConnection conn, String connStr, String dbName)
-    {
-        // 如果没有打开，则改变链接字符串
-        var builder = new ConnectionStringBuilder(connStr);
-        var flag = false;
-        if (builder["Database"] != null)
-        {
-            builder["Database"] = dbName;
-            flag = true;
-        }
-        else if (builder["Initial Catalog"] != null)
-        {
-            builder["Initial Catalog"] = dbName;
-            flag = true;
-        }
-        if (flag)
-        {
-            connStr = builder.ToString();
-            //WriteLog("系统级：{0}", connStr);
-        }
-
-        conn.ConnectionString = connStr;
-        conn.Open();
     }
     #endregion
 }
