@@ -405,7 +405,8 @@ partial class DAL
 
     private String GetTraceName(String sql, String action)
     {
-        var act = (action + "").TrimEnd("Async");
+        // 移除 Async 后缀获取操作名，避免 StringHelper.TrimEnd 与 ReadOnlySpan<char>.TrimEnd 混淆
+        var act = action.EndsWith("Async") ? action[..^5] : action;
         if (act.EqualIgnoreCase("InsertAndGetIdentity"))
         {
             act = "Insert";

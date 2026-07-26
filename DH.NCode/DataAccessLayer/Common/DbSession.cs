@@ -980,18 +980,18 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 break;
             case TypeCode.Single:
                 {
-                    var v = (Single)cur - (Single)old;
+                    var v = (Single)(cur ?? 0) - (Single)(old ?? 0);
                     diff = Single.IsNaN(v) ? (Single)0 : v;
                 }
                 break;
             case TypeCode.Double:
                 {
-                    var v = (Double)cur - (Double)old;
+                    var v = (Double)(cur ?? 0.0) - (Double)(old ?? 0.0);
                     diff = Double.IsNaN(v) ? 0.0 : v;
                 }
                 break;
             case TypeCode.Decimal:
-                diff = (Decimal)cur - (Decimal)old;
+                diff = (Decimal)(cur ?? 0m) - (Decimal)(old ?? 0m);
                 break;
             default:
                 diff = cur;

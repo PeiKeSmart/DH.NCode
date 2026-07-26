@@ -1102,7 +1102,8 @@ abstract class DbBase : DisposeBase, IDatabase
         var cfg = NewLife.Setting.Current;
         file = file.Replace("|DataDirectory|", cfg.DataPath);
         file = file.Replace(@"~\App_Data", cfg.DataPath);
-        file = file.TrimStart("~");
+        // 移除开头的 ~ 前缀，避免 StringHelper.TrimStart 与 ReadOnlySpan<char>.TrimStart 混淆
+        if (file.StartsWith("~")) file = file[1..];
 
         // 过滤掉不必要的符号
         file = new FileInfo(file.GetBasePath()).FullName;
