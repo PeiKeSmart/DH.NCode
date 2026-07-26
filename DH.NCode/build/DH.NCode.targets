@@ -46,10 +46,10 @@
             var pAssetsJsonPath = @"$(ProjectAssetsFile)";
             var nuGetPackageRoot = @"$(NuGetPackageRoot)";
             var pkgRgx = @"""libraries"":[\s\S]*(?=""{0}/)""{0}/([^""]+)""";
-            var corePkgName = "NewLife.Core";
-            var xcodePkgName = "NewLife.XCode";
+            var corePkgName = "DH.NCore";
+            var xcodePkgName = "DH.NCode";
             var coreDllName = corePkgName;
-            var xcodeDllName = xcodePkgName.TrimStart("NewLife.".ToArray());
+            var xcodeDllName = xcodePkgName;
             var framework = "net45";
             var coreVer = "";
             var xcodeVer = "";
