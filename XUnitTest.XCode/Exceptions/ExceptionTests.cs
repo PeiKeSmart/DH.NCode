@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using XCode;
 using XCode.Exceptions;
 using Xunit;

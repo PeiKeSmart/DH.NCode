@@ -136,16 +136,12 @@ abstract class RemoteDbSession : DbSession
         if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname) && !sysdbname.IsNullOrEmpty())
         {
             Log?.Info("切换到系统库[{0}]", sysdbname);
+            using var conn = Database.Factory.CreateConnection();
             try
             {
-                // 通过 OpenConnection 获取已正确处理的连接（含 OnGetConnectionString 加工），
-                // 然后用驱动自身的 ChangeDatabase 切换数据库，避免 XCode 的 ConnectionStringBuilder
-                // 解析重建连接字符串时可能产生的格式问题。
-                using var conn = Database.OpenConnection();
+                //conn.ConnectionString = Database.ConnectionString;
 
-                // 切换到系统数据库。MySqlConnection.ChangeDatabase 会关闭连接、
-                // 修改 Setting.Database 后再重新打开，确保连接池使用正确的连接字符串
-                conn.ChangeDatabase(sysdbname);
+                OpenDatabase(conn, Database.ConnectionString, sysdbname);
 
                 return callback(this, conn);
             }
@@ -165,6 +161,31 @@ abstract class RemoteDbSession : DbSession
             return callback(this, conn);
         }
     }
+
+    private static void OpenDatabase(IDbConnection conn, String connStr, String dbName)
+    {
+        // 如果没有打开，则改变链接字符串
+        var builder = new ConnectionStringBuilder(connStr);
+        var flag = false;
+        if (builder["Database"] != null)
+        {
+            builder["Database"] = dbName;
+            flag = true;
+        }
+        else if (builder["Initial Catalog"] != null)
+        {
+            builder["Initial Catalog"] = dbName;
+            flag = true;
+        }
+        if (flag)
+        {
+            connStr = builder.ToString();
+            //WriteLog("系统级：{0}", connStr);
+        }
+
+        conn.ConnectionString = connStr;
+        conn.Open();
+    }
     #endregion
 }
 
@@ -174,80 +195,54 @@ abstract class RemoteDbMetaData : DbMetaData
     #region 属性
     #endregion
 
-    #region 架构定义
-    public override Object? SetSchema(DDLSchema schema, Object?[] values)
+    #region DDL 执行方法
+    /// <summary>建立数据库</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <param name="file">数据文件路径</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
     {
-        if (Database is DbBase db)
+        if (Database is not DbBase db) return false;
+
+        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:CreateDatabase", databaseName);
+
+        var sql = base.GetSchemaSQL(DDLSchema.CreateDatabase, [databaseName, file]);
+        if (sql.IsNullOrEmpty()) return false;
+
+        if (span != null) span.Tag += Environment.NewLine + sql;
+
+        var session = Database.CreateSession();
+        if (session is RemoteDbSession ss)
         {
-            var tracer = db.Tracer;
-            if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase) tracer = null;
-            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
-
-            var session = Database.CreateSession();
-            var databaseName = Database.DatabaseName;
-
-            // ahuang 2014.06.12  类型强制转string的bug
-            if (values != null && values.Length > 0 && values[0] is String str && !str.IsNullOrEmpty()) databaseName = str;
-
-            switch (schema)
+            ss.WriteSQL(sql);
+            return ss.ProcessWithSystem((s, c) =>
             {
-                //case DDLSchema.TableExist:
-                //    return session.QueryCount(GetSchemaSQL(schema, values)) > 0;
+                using var cmd = Database.Factory.CreateCommand();
+                cmd.Connection = c;
+                cmd.CommandText = sql;
 
-                case DDLSchema.DatabaseExist:
-                    return !databaseName.IsNullOrEmpty() && DatabaseExist(databaseName);
-
-                case DDLSchema.CreateDatabase:
-                    values = [databaseName, values == null || values.Length < 2 ? null : values[1]];
-
-                    var sql = base.GetSchemaSQL(schema, values);
-                    if (sql.IsNullOrEmpty()) return null;
-
-                    if (span != null) span.Tag += Environment.NewLine + sql;
-
-                    if (session is RemoteDbSession ss)
-                    {
-                        ss.WriteSQL(sql);
-                        return ss.ProcessWithSystem((s, c) =>
-                        {
-                            using var cmd = Database.Factory.CreateCommand();
-                            cmd.Connection = c;
-                            cmd.CommandText = sql;
-
-                            return cmd.ExecuteNonQuery();
-                        });
-                    }
-
-                    return 0;
-
-                //case DDLSchema.DropDatabase:
-                //    return DropDatabase(databaseName);
-
-                default:
-                    break;
-            }
+                return cmd.ExecuteNonQuery();
+            }) is Int32 r && r > 0;
         }
-        return base.SetSchema(schema, values!);
+
+        return false;
     }
 
-    protected virtual Boolean DatabaseExist(String databaseName)
+    /// <summary>数据库是否存在</summary>
+    /// <param name="databaseName">数据库名。为空时使用当前数据库</param>
+    /// <returns></returns>
+    public override Boolean DatabaseExist(String? databaseName)
     {
+        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
+        if (databaseName.IsNullOrEmpty()) return false;
+
         var sql = GetSchemaSQL(DDLSchema.DatabaseExist, [databaseName]);
         if (sql.IsNullOrEmpty()) return false;
 
         var session = Database.CreateSession();
         return session.QueryCount(sql) > 0;
     }
-
-    //protected virtual Boolean DropDatabase(String databaseName)
-    //{
-    //    var session = Database.CreateSession();
-    //    var sql = DropDatabaseSQL(databaseName);
-    //    if (sql.IsNullOrEmpty()) return session.Execute(sql) > 0;
-
-    //    return true;
-    //}
+    #endregion
 
     //Object ProcessWithSystem(Func<IDbSession, Object> callback) => (Database.CreateSession() as RemoteDbSession).ProcessWithSystem((s, c) => callback(s));
-    #endregion
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NewLife.Security;
 using XCode.DataAccessLayer;
 using Xunit;

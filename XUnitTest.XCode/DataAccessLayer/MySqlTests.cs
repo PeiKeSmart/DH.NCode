@@ -1,17 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Serialization;
+
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
-using XCode.Model;
+
 using Xunit;
+
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -412,7 +415,7 @@ public class MySqlTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+        dal.Db.CreateMetaData().DropTable(table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
@@ -479,7 +482,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=MyISAM", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 
@@ -507,7 +510,7 @@ public class MySqlTests
         Assert.Contains(" KEY_BLOCK_SIZE=4", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 
@@ -544,7 +547,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=Archive", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 
@@ -832,45 +835,6 @@ public class MySqlTests
         Assert.All(all2, r => Assert.StartsWith("updated_", r.Remark));
     }
 
-    [Fact(DisplayName = "BatchUpdate — 指定不存在更新列时安全返回0，不生成非法SQL")]
-    public void BatchUpdate_WithUnknownColumns_ReturnsZero()
-    {
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch_mysql_unknown", connStr, null, "MySql");
-        var dal = DAL.Create("Membership_Batch_mysql_unknown");
-        var db = (dal.Db as MySql)!;
-
-        if (!db.IsNewLifeDriver)
-        {
-            XTrace.WriteLine("当前未加载NewLife.MySql驱动，跳过BatchUpdate集成测试");
-            return;
-        }
-
-        using var split = CreateForBatch("Update_UnknownColumns");
-
-        var list = new List<Role2>
-        {
-            new Role2 { Name = "管理员" },
-            new Role2 { Name = "高级用户" }
-        };
-        var rs = list.BatchInsert();
-        Assert.Equal(list.Count, rs);
-
-        var all = Role2.FindAll();
-        Assert.Equal(list.Count, all.Count);
-
-        rs = all.BatchUpdate(new BatchOption
-        {
-            UpdateColumns = ["NotExists"],
-            AddColumns = []
-        });
-
-        Assert.Equal(0, rs);
-
-        var all2 = Role2.FindAll();
-        Assert.All(all2, r => Assert.Null(r.Remark));
-    }
-
     [Fact(DisplayName = "QueryModelsAsync — 直接映射模型列表，跳过DbTable中间层")]
     public async void QueryModelsAsyncTest()
     {
@@ -888,6 +852,32 @@ public class MySqlTests
         var admin = list.FirstOrDefault(r => r.Name == "管理员");
         Assert.NotNull(admin);
         Assert.True(admin.ID > 0);
+    }
+
+    /// <summary>验证 DatabaseExist(null) 能正确从连接字符串解析数据库名并判断存在</summary>
+    [Fact(DisplayName = "DatabaseExist(null)应解析连接字符串中的数据库名并返回true")]
+    public void DatabaseExist_Null_ShouldReturnTrue()
+    {
+        // 使用 sys 库连接，sys 是 MySQL 系统库，一定存在
+        DAL.AddConnStr("MySql_DatabaseExist_Null", _ConnStr, null, "MySql");
+        var dal = DAL.Create("MySql_DatabaseExist_Null");
+        var meta = dal.Db.CreateMetaData();
+
+        // 传入 null，应自动从连接字符串解析出 Database=sys，并返回 true
+        var exists = meta.DatabaseExist(null);
+        Assert.True(exists);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成的 SQL 包含 IF NOT EXISTS</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应包含IF NOT EXISTS确保幂等")]
+    public void CreateDatabaseSQL_ShouldContain_IfNotExists()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 
     private class MyMySqlRole

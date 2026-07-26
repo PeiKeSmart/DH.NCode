@@ -1895,8 +1895,6 @@ public class MockUser : IUser
     public IRole[] Roles { get; set; } = [];
     public String? RoleName => Role?.Name;
 
-    public Int32 PositionID { get; set; }
-
     public Boolean Has(IMenu menu, params PermissionFlags[] flags) => false;
     public void Logout() { }
     public Int32 Save() => 0;
