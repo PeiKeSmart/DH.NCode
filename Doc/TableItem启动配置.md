@@ -11,7 +11,7 @@ XCode 支持两种修改方式：
 | 修改方式 | 作用范围 | 使用场景 | 修改方法 |
 |---------|---------|---------|---------|
 | **临时修改** | 线程级/调用级 | 动态分表分库、读写分离、**多租户** | `Meta.ConnName`、`Meta.TableName` |
-| **启动配置** | 全局永久 | 表前缀、分库策略、**单租户部署** | `User.Meta.Table.ConnName`、`User.Meta.Table.TableName` |
+| **启动配置** | 全局永久 | 表前缀、分库策略、单租户部署、**单表迁移控制** | `User.Meta.Table.ConnName`、`User.Meta.Table.TableName`、`User.Meta.Table.Migration` |
 
 ---
 
@@ -92,6 +92,23 @@ Order.Meta.Table.ConnName = $"Tenant_{tenantId}";
 Product.Meta.Table.ConnName = $"Tenant_{tenantId}";
 ```
 
+#### 场景4：单表迁移控制
+
+同一解决方案下可能有多个项目引用同一个实体类，但只有主系统应负责建表/改表。启动时可按表级别收紧或关闭反向工程，覆盖实例持久保留，不会被表特性回退。
+
+```csharp
+// 主系统：启动时全局 Migration=On，对个别敏感表收紧
+XCodeSetting.Current.Migration = Migration.On;
+User.Meta.Table.Migration = Migration.ReadOnly;    // 主系统只允许读模式
+Log.Meta.Table.Migration = Migration.Off;          // 日志表不参与建表
+
+// 从属系统：启动时全局关闭，不对共享表做任何结构变更
+XCodeSetting.Current.Migration = Migration.Off;
+// 不需要逐个设置表，所有共享表自动关闭迁移
+```
+
+**优先级**：启动时代码配置 ＞ 表特性 `BindTable(Migration=...)` ＞ 全局 `XCodeSetting.Migration`。仅可收紧，不可放大。
+
 ---
 
 ## 设计理念
@@ -102,7 +119,8 @@ Product.Meta.Table.ConnName = $"Tenant_{tenantId}";
 ┌─────────────────────────────────────────────────────┐
 │                    TableItem                        │
 │  ┌──────────────┐                                   │
-│  │ ConnName     │ ←── 默认从特性读取，可在启动时修改   │
+│ `TableItem.Migration`：表级反向工程模式。三层优先级：启动时代码配置 ＞ 表特性 ＞ 全局配置。设为 `null` 回退到表特性；特性为空则继承全局
+-  │ ConnName     │ ←── 默认从特性读取，可在启动时修改   │
 │  │ TableName    │     (使用 C# 14 field 关键字)     │
 │  └──────┬───────┘                                   │
 │         │                                            │
@@ -662,13 +680,15 @@ public class TableItem
 2. **调用时机**：启动时配置，首次访问实体类之前
 3. **自动同步**：修改 `TableItem` 时自动同步到 `DataTable`
 4. **临时修改**：推荐使用 `Meta.CreateSplit()`，离开作用域时自动恢复；手动修改必须设置为 `null` 恢复
-5. **多租户支持**：XCode 自带 `TenantContext.CurrentId` 获取当前租户
-6. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
+5. **表级迁移控制**：启动时 `Meta.Table.Migration` 按表收紧反向工程，覆盖值运行期持久保留，不会被表特性回退
+7. **多租户支持**：XCode 自带 `TenantContext.CurrentId` 获取当前租户
+7. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
 
 ### 适用场景
 
 - ✅ 表前缀：统一为所有表添加前缀
 - ✅ 分库：按业务模块分配到不同数据库
+- ✅ 单表迁移控制：主系统建表、从属系统关闭迁移
 - ✅ 单租户部署：整个应用只服务一个租户
 - ✅ 环境切换：开发/测试/生产使用不同配置
 - ✅ 数据库迁移：整体切换到新数据库

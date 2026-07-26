@@ -23,6 +23,7 @@
 - `PrimaryKeys`：主键集合
 - `Master`：主字段（业务识别字段）
 - `DataTable`：DAL 层表结构对象
+- `Migration`：表级反向工程模式。三层优先级：**启动时代码配置 > 表特性 > 全局配置**。设为 `null` 时回退到表特性；特性也为空时才继承全局。默认跟随 `BindTableAttribute.Migration`。
 
 ## 3）字段集合特性
 
@@ -55,7 +56,7 @@
 
 并且“未命中结果也缓存”，减少重复查找开销。
 
-## 6）运行时改表名/连接名
+## 6）运行时改表名/连接名/迁移模式
 
 可在应用启动后按租户/环境改写：
 
@@ -63,9 +64,10 @@
 var table = User.Meta.Table;
 table.ConnName = "TenantA";
 table.TableName = "User_202603";
+table.Migration = Migration.Off;   // 启动时关闭指定表的反向工程
 ```
 
-`TableItem` 会同步 `DataTable`，后续 SQL 生成自动生效。
+`TableItem` 会同步 `DataTable`，后续 SQL 生成与反向工程自动生效。启动期覆盖的 `Migration` 在运行期间持久保留，不会被表特性回退。
 
 > 建议：这类改写集中在启动阶段或明确作用域内执行，避免并发请求互相污染。
 
