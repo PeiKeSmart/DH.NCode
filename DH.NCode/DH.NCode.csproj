@@ -30,7 +30,7 @@
     <RepositoryUrl>https://github.com/PeiKeSmart/DH.NCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增 IQueryable LINQ 查询支持（EntityQueryable/EntityQueryProvider）；新增 WhereIf 内联条件与 FindAllWhereIf 实体级动态筛选；新增 Include(Type) 预加载关联实体缓存；新增 ClickHouse/DuckDB/MongoDB 数据库 Provider；新增窗口函数支持（SelectBuilder.Window + WindowFunction）；新增二级缓存分布式协调（CacheInvalidator.Provider 跨进程版本号机制）；完善 Linq/窗口函数/二级缓存单元测试；更新需求文档、竞品分析、模块清单</PackageReleaseNotes>
+    <PackageReleaseNotes>新增导航属性框架，支持导航注册、Include 路径与批量加载；新增 DAL.Select&lt;T&gt;() 流式 LINQ 查询入口，支持全链式流式调用；重构 DbMetaData 标准化 DDL 操作接口，统一 DatabaseExist 实现；重构 ConnectionPool 支持异步借出归还与泛型 Execute；新增 Hana/IRIS/VastBase/Network/NovaDb 数据库支持；修复 FieldCache 并发竞态、异步重试阻塞线程池、HttpClient 泄漏等缺陷；清理废弃接口、ETL 引擎与同步框架等冗余代码；提升测试隔离性与并发健壮性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
