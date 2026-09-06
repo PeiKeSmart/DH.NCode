@@ -113,7 +113,7 @@ public class NovaDbEmbeddedTests
     public void MembershipTest()
     {
         var dataDir = "Data\\nova_member";
-        DAL.AddConnStr("novaEmbed_member", $"Data Source={dataDir}", null, "NovaDb");
+                DAL.AddConnStr("novaEmbed_member", $"Data Source={dataDir}", null, "NovaDb");
 
         User.Meta.ConnName = "novaEmbed_member";
         Role.Meta.ConnName = "novaEmbed_member";
