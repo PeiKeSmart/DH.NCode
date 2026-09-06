@@ -83,8 +83,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DH.NNovaDb" Version="4.25.2026.906-beta0832" />
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.7.0" />
-    <PackageReference Include="DH.NIP" Version="4.21.2026.705-beta0656" />
+    <PackageReference Include="DH.NIP" Version="4.25.2026.906-beta0756" />
     <PackageReference Include="DH.UnitTest" Version="4.25.2026.827-beta0613" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.11" />
