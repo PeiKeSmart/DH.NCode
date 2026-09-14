@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;net10.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0;net11.0;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>XCode DB2适配包</AssemblyTitle>
     <Description>为 XCode 提供 DB2 数据库驱动接入与方言支持，支持自动建模迁移、缓存协同与高性能数据访问。</Description>
     <Company>湖北登灏科技有限公司</Company>
@@ -41,7 +41,7 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net10.0'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net10.0' or '$(TargetFramework)'=='net11.0'">
     <PackageReference Include="Net.IBM.Data.Db2" Version="10.0.0.200" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
