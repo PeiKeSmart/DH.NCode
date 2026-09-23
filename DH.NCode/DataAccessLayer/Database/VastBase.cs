@@ -491,6 +491,9 @@ internal class VastBaseSession : RemoteDbSession
 /// <summary>VastBase元数据</summary>
 internal class VastBaseMetaData : RemoteDbMetaData
 {
+    /// <summary>由约束创建的索引。索引名 => 约束名，删除这类索引必须改走 Alter Table Drop Constraint</summary>
+    private readonly Dictionary<String, String> _constraints = new(StringComparer.OrdinalIgnoreCase);
+
     public VastBaseMetaData() => Types = _DataTypes;
 
     #region 数据类型
@@ -838,6 +841,9 @@ internal class VastBaseMetaData : RemoteDbMetaData
         {
             foreach (var existingIndex in table.Indexes)
             {
+                // 跳过自身。索引位于所属表的索引集合中，不排除会把自己判为已存在，导致索引永不创建
+                if (ReferenceEquals(existingIndex, index)) continue;
+
                 // 不区分大小写比对索引名和列
                 if (existingIndex.Name.EqualIgnoreCase(index.Name) &&
                     existingIndex.Columns != null && index.Columns != null &&
@@ -860,6 +866,22 @@ internal class VastBaseMetaData : RemoteDbMetaData
         }
 
         return base.CreateIndexSQL(index);
+    }
+
+    /// <summary>删除索引的 SQL。由唯一约束/主键约束创建的索引不能直接 Drop Index，必须改为删除约束</summary>
+    /// <param name="index">索引</param>
+    /// <returns></returns>
+    public override String DropIndexSQL(IDataIndex index)
+    {
+        var table = FormatName(index.Table);
+        var name = index.Name;
+        if (name.IsNullOrEmpty()) return base.DropIndexSQL(index);
+
+        // PostgreSQL/VastBase 中唯一约束会自动创建同名索引，直接 Drop Index 会报 2BP01 错误
+        if (_constraints.TryGetValue(name, out var constraintName) && !constraintName.IsNullOrEmpty())
+            return $"Alter Table {table} Drop Constraint \"{constraintName}\"";
+
+        return $"Drop Index If Exists \"{name}\"";
     }
 
     #endregion 架构定义
@@ -912,8 +934,11 @@ ORDER BY
 
         var dt = ds.Tables[0];
 
-        // 按表名分组
-        var tableDict = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+        // 查询由约束创建的索引，PostgreSQL/VastBase 中这类索引不能直接 Drop Index 删除
+        LoadConstraintIndexes(session, searchPath);
+
+        // 按表名分组。必须按精确表名分组，避免 Role/role 等大小写不同但同名的表被合并后字段错乱
+        var tableDict = new Dictionary<String, List<DataRow>>(StringComparer.Ordinal);
         foreach (DataRow row in dt.Rows)
         {
             var tableName = row["table_name"]?.ToString();
@@ -1073,6 +1098,36 @@ ORDER BY
 
         DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中找到 {2} 个表", Database.ConnName, searchPath, list.Count);
         return list;
+    }
+
+    /// <summary>加载由约束创建的索引。唯一约束/主键约束会自动创建同名索引，删除时需改为 Drop Constraint</summary>
+    /// <param name="session">数据库会话</param>
+    /// <param name="schema">Schema 名称</param>
+    private void LoadConstraintIndexes(IDbSession session, String schema)
+    {
+        _constraints.Clear();
+
+        var sql = $@"SELECT 
+    ic.relname as index_name,
+    c.conname as constraint_name
+FROM 
+    pg_catalog.pg_constraint c
+    JOIN pg_catalog.pg_class ic ON ic.oid = c.conindid
+    JOIN pg_catalog.pg_namespace n ON n.oid = c.connamespace
+WHERE 
+    c.contype IN ('u', 'p') AND n.nspname = '{schema}'";
+
+        var ds = session.Query(sql);
+        if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return;
+
+        foreach (DataRow row in ds.Tables[0].Rows)
+        {
+            var indexName = row["index_name"]?.ToString();
+            var constraintName = row["constraint_name"]?.ToString();
+            if (String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(constraintName)) continue;
+
+            _constraints[indexName!] = constraintName!;
+        }
     }
     #endregion
 }

@@ -150,7 +150,8 @@ internal partial class DbMetaData
             }
             catch (Exception ex)
             {
-                WriteLog(ex.ToString());
+                // 输出表名便于定位，否则只有一个孤立的异常栈
+                WriteLog("[{0}]检查数据表[{1}]失败：{2}", Database.ConnName, item.TableName, ex);
             }
         }
     }
@@ -230,8 +231,9 @@ internal partial class DbMetaData
     protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate, XCodeSetting set)
     {
         var sb = new StringBuilder();
-        var etdic = entitytable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
-        var dbdic = dbtable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
+        // 个别数据库可能存在忽略大小写同名的字段，直接 ToDictionary 会抛出重复键异常，改为容忍重复
+        var etdic = BuildColumnDictionary(entitytable.Columns);
+        var dbdic = BuildColumnDictionary(dbtable.Columns);
 
         #region 新增列
         foreach (var item in entitytable.Columns)
@@ -322,6 +324,25 @@ internal partial class DbMetaData
         #endregion
 
         return sb.ToString();
+    }
+
+    /// <summary>构造字段字典。忽略大小写，遇到重复字段时保留第一个，避免整表同步中断</summary>
+    /// <param name="columns">字段集合</param>
+    /// <returns></returns>
+    private Dictionary<String, IDataColumn> BuildColumnDictionary(IList<IDataColumn> columns)
+    {
+        var dic = new Dictionary<String, IDataColumn>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in columns)
+        {
+            var key = FormatName(item);
+            if (dic.ContainsKey(key))
+            {
+                WriteLog("数据表[{0}]存在重复字段[{1}]，已忽略后续同名字段", item.Table?.TableName, item.ColumnName);
+                continue;
+            }
+            dic.Add(key, item);
+        }
+        return dic;
     }
 
     /// <summary>检查表说明和索引</summary>
