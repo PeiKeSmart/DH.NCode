@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NewLife.Log;
@@ -10,6 +11,7 @@ namespace XUnitTest.XCode.Code;
 
 public class EntityBuilderTests
 {
+    private IList<IDataTable> _tables;
     private IDataTable _table;
     private IDataTable _tableLog;
     private BuilderOption _option;
@@ -17,9 +19,9 @@ public class EntityBuilderTests
     public EntityBuilderTests()
     {
         _option = new BuilderOption();
-        var tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
-        _table = tables.FirstOrDefault(e => e.Name == "User");
-        _tableLog = tables.FirstOrDefault(e => e.Name == "Log");
+        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _table = _tables.FirstOrDefault(e => e.Name == "User");
+        _tableLog = _tables.FirstOrDefault(e => e.Name == "Log");
     }
 
     private String ReadTarget(String file, String text)
@@ -383,6 +385,45 @@ public class EntityBuilderTests
     }
 
     [Fact]
+    public void BusinessTenantTable_ImplementsITenantScope()
+    {
+        var option = new EntityBuilderOption
+        {
+            ConnName = "Test",
+            Namespace = "Test",
+            Nullable = true,
+        };
+
+        var table = _tables.First(e => e.Name == "Role");
+        var builder = new EntityBuilder
+        {
+            Table = table,
+            AllTables = _tables,
+            Option = option,
+            Business = true,
+        };
+
+        builder.Execute();
+        var code = builder.ToString();
+
+        Assert.Contains("public partial class Role : Entity<Role>, ITenantScope", code);
+        Assert.Contains("Meta.Interceptors.Add<TenantInterceptor>();", code);
+
+        table = _tables.First(e => e.Name == "Tenant");
+        builder = new EntityBuilder
+        {
+            Table = table,
+            AllTables = _tables,
+            Option = option,
+        };
+
+        builder.Execute();
+        code = builder.ToString();
+
+        Assert.DoesNotContain("public partial class Tenant : Entity<Tenant>, ITenantScope", code);
+    }
+
+    [Fact]
     public void FixModelFile()
     {
         // 加载模型文件，得到数据表
@@ -398,6 +439,71 @@ public class EntityBuilderTests
 
         var xml = File.ReadAllText(file);
         Assert.Contains("Name", xml);
+    }
+
+    /// <summary>
+    /// 验证：Map特性只有表@主键（无显示字段），且被映射表无Master/Name字段时，
+    /// 不应生成孤立的[Map(...)]特性（缺少属性声明）
+    /// </summary>
+    [Fact]
+    public void BuildMap_NoDisplayField_NoOrphanedMapAttribute()
+    {
+        // 构造 ProductRelease 表（无 Master 字段，无 Name 字段）
+        var releaseTable = new XTable("ProductRelease") { Description = "产品版本" };
+        var releaseId = (XField)releaseTable.CreateColumn();
+        releaseId.Name = "Id";
+        releaseId.DataType = typeof(Int32);
+        releaseId.Identity = true;
+        releaseId.PrimaryKey = true;
+        releaseTable.Columns.Add(releaseId);
+
+        var releaseVersion = (XField)releaseTable.CreateColumn();
+        releaseVersion.Name = "Version";
+        releaseVersion.DataType = typeof(String);
+        releaseTable.Columns.Add(releaseVersion);
+
+        // 构造 ProductPackage 表，ReleaseId 的 Map 只有 "ProductRelease@Id"（无显示字段）
+        var packageTable = new XTable("ProductPackage") { Description = "产品发布包" };
+        var pkgId = (XField)packageTable.CreateColumn();
+        pkgId.Name = "Id";
+        pkgId.DataType = typeof(Int32);
+        pkgId.Identity = true;
+        pkgId.PrimaryKey = true;
+        packageTable.Columns.Add(pkgId);
+
+        var releaseIdCol = (XField)packageTable.CreateColumn();
+        releaseIdCol.Name = "ReleaseId";
+        releaseIdCol.DataType = typeof(Int32);
+        releaseIdCol.Map = "ProductRelease@Id";
+        releaseIdCol.Description = "发布版本。所属发布版本";
+        packageTable.Columns.Add(releaseIdCol);
+
+        var allTables = new List<IDataTable> { releaseTable, packageTable };
+
+        var option = new EntityBuilderOption
+        {
+            ConnName = "Test",
+            Namespace = "Test",
+            Nullable = true,
+        };
+
+        var builder = new EntityBuilder
+        {
+            Table = packageTable,
+            AllTables = allTables,
+            Option = option,
+        };
+
+        builder.Execute();
+        var code = builder.ToString();
+
+        Assert.NotEmpty(code);
+
+        // 验证不存在孤立的[Map(...)]特性（即[Map后面紧跟空行或#endregion）
+        Assert.DoesNotContain("[Map(nameof(ReleaseId)", code);
+
+        // 验证仍然生成了对象引用属性（ProductRelease对象），且使用 Extends.Get 模式
+        Assert.Contains("public ProductRelease? Release => Extends.Get(nameof(Release), k => ProductRelease.FindById(ReleaseId));", code);
     }
 
     [Fact(Skip = "跳过")]

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Net;
@@ -631,22 +631,12 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
-    protected override Boolean DatabaseExist(String databaseName)
-    {
-        //return base.DatabaseExist(databaseName);
-
-        var session = Database.CreateSession();
-        //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
-
     /// <summary>
     /// 创建数据库的 SQL 语句，强制带上双引号。默认使用 UTF8 编码。
     /// </summary>
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
-        return String.Format("Create Database \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
+        return String.Format("Create Database If Not Exists \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
     }
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";

@@ -17,11 +17,13 @@ public partial class User : Entity<User> { }
 | `Description` | `String?` | 表描述 |
 | `ConnName` | `String?` | 连接名（运行时实际连接由 `Meta.ConnName` 控制） |
 | `DbType` | `DatabaseType` | 记录生成时的数据库类型，反向工程时优先沿用对应 `RawType` |
+| `Migration` | `String?` | 表级反向工程模式（Off/ReadOnly/On/Full）。编译期默认，启动时可通过 `Meta.Table.Migration` 覆盖，覆盖值优先于特性。仅可收紧全局权限，不可放大 |
 | `IsView` | `Boolean` | 是否为视图（视图不参与反向工程建表） |
 
 **关键说明**：
 - 多数场景 `DbType` 设 `None`，代表跨库通用。
 - 特定数据库生成的实体若 `DbType` 与运行时数据库相同，反向工程会使用字段的原始类型（`RawType`），以保持最佳兼容。
+- `Migration` 优先级：启动时 `Meta.Table.Migration` 代码配置 ＞ 特性声明的 `BindTable(Migration=...)` ＞ 全局 `XCodeSetting.Migration`。仅可收紧，不可放大。
 
 ## 2. BindColumnAttribute
 

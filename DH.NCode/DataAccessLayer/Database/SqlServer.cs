@@ -648,6 +648,25 @@ internal class SqlServerSession : RemoteDbSession
         return sb.Return(true);
     }
 
+    /// <summary>批量更新</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要更新的字段，默认所有字段</param>
+    /// <param name="updateColumns">要更新的字段，默认脏数据</param>
+    /// <param name="addColumns">要累加更新的字段，默认累加</param>
+    /// <param name="list">实体列表</param>
+    /// <returns>更新行数</returns>
+    public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
+    {
+        var ps = new HashSet<String>();
+        var sql = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
+        if (sql.IsNullOrEmpty()) return 0;
+
+        DefaultSpan.Current?.AppendTag(sql);
+
+        var dpsList = GetParametersList(columns, ps, list, true);
+        return BatchExecute(sql, dpsList);
+    }
+
     /// <summary>批量插入或更新</summary>
     /// <param name="table">数据表</param>
     /// <param name="columns">要插入的字段，默认所有字段</param>
@@ -1195,49 +1214,38 @@ internal class SqlServerMetaData : RemoteDbMetaData
     //public virtual String DescriptionSql { get { return IsSQL2005 ? _DescriptionSql2005 : _DescriptionSql2000; } }
     #endregion
 
-    #region 数据定义
-    public override Object? SetSchema(DDLSchema schema, params Object?[] values)
+    #region DDL 执行方法
+    /// <summary>建立数据库（创建后等待5秒确保数据库就绪）</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <param name="file">数据文件路径</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
     {
-        if (Database is DbBase db)
-        {
-            var tracer = db.Tracer;
-            if (schema is not DDLSchema.BackupDatabase and not DDLSchema.RestoreDatabase) tracer = null;
-            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
-
-            var dbname = "";
-            var file = "";
-            var recoverDir = "";
-            switch (schema)
-            {
-                case DDLSchema.CreateDatabase:
-                    var rs = base.SetSchema(schema, values);
-                    // 等待一会，否则立即使用数据库会报错
-                    Thread.Sleep(5_000);
-                    return rs;
-                case DDLSchema.BackupDatabase:
-                    if (values != null)
-                    {
-                        if (values.Length > 0)
-                            dbname = values[0] as String;
-                        if (values.Length > 1)
-                            file = values[1] as String;
-                    }
-                    return Backup(dbname!, file, false);
-                case DDLSchema.RestoreDatabase:
-                    if (values != null)
-                    {
-                        if (values.Length > 0)
-                            file = values[0] as String;
-                        if (values.Length > 1)
-                            recoverDir = values[1] as String;
-                    }
-                    return Restore(file!, recoverDir!, true);
-                default:
-                    break;
-            }
-        }
-        return base.SetSchema(schema, values);
+        var rs = base.CreateDatabase(databaseName, file);
+        // 等待一会，否则立即使用数据库会报错
+        Thread.Sleep(5_000);
+        return rs;
     }
+
+    /// <summary>备份数据库</summary>
+    /// <param name="dbName">数据库名</param>
+    /// <param name="backupFile">备份文件</param>
+    /// <returns>备份文件路径</returns>
+    public override String? BackupDatabase(String? dbName = null, String? backupFile = null)
+    {
+        return Backup(dbName!, backupFile, false);
+    }
+
+    /// <summary>还原数据库</summary>
+    /// <param name="backupFile">备份文件</param>
+    /// <param name="recoverDir">还原目录</param>
+    /// <returns>是否成功</returns>
+    public override Boolean RestoreDatabase(String backupFile, String? recoverDir = null)
+    {
+        var result = Restore(backupFile, recoverDir!, true);
+        return !result.IsNullOrEmpty();
+    }
+    #endregion
 
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
@@ -1280,15 +1288,6 @@ internal class SqlServerMetaData : RemoteDbMetaData
     }
 
     public override String DatabaseExistSQL(String dbname) => $"SELECT * FROM sysdatabases WHERE name = N'{dbname}'";
-
-    /// <summary>使用数据架构确定数据库是否存在，因为使用系统视图可能没有权限</summary>
-    /// <param name="dbname"></param>
-    /// <returns></returns>
-    protected override Boolean DatabaseExist(String dbname)
-    {
-        var dt = GetSchema(_.Databases, [dbname]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
 
     //protected override Boolean DropDatabase(String databaseName)
     //{
@@ -1632,8 +1631,6 @@ internal class SqlServerMetaData : RemoteDbMetaData
         sb.AppendFormat("Drop Database {0}", Database.FormatName(dbname));
         return sb.ToString();
     }
-
-    #endregion
 
     /// <summary>数据类型映射</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()

@@ -7,10 +7,13 @@ using NewLife.Security;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
+/// <summary>DAL 数据库操作测试。操作共享 Membership 库，需与其他数据库测试串行，避免并行读写干扰</summary>
+[Collection("Database")]
 public class DAL_DbOperate_Tests
 {
     public DAL_DbOperate_Tests()
@@ -194,7 +197,7 @@ public class DAL_DbOperate_Tests
     //}
 
     [Fact]
-    public async void SelectCountAsync()
+    public async Task SelectCountAsync()
     {
         var dal = User.Meta.Session.Dal;
 
@@ -211,7 +214,7 @@ public class DAL_DbOperate_Tests
     }
 
     [Fact]
-    public async void QueryAsync()
+    public async Task QueryAsync()
     {
         var dal = User.Meta.Session.Dal;
 
@@ -234,7 +237,7 @@ public class DAL_DbOperate_Tests
     }
 
     [Fact]
-    public async void ExecuteAsync()
+    public async Task ExecuteAsync()
     {
         var dal = User.Meta.Session.Dal;
 
@@ -249,7 +252,7 @@ public class DAL_DbOperate_Tests
     }
 
     [Fact]
-    public async void ExecuteAsyncWithParameter()
+    public async Task ExecuteAsyncWithParameter()
     {
         var dal = User.Meta.Session.Dal;
 
@@ -269,7 +272,7 @@ public class DAL_DbOperate_Tests
     }
 
     [Fact]
-    public async void ExecuteAsyncWithTimeout()
+    public async Task ExecuteAsyncWithTimeout()
     {
         var dal = User.Meta.Session.Dal;
 
@@ -281,7 +284,7 @@ public class DAL_DbOperate_Tests
     }
 
     [Fact]
-    public async void ExecuteScalarAsync()
+    public async Task ExecuteScalarAsync()
     {
         var dal = User.Meta.Session.Dal;
 

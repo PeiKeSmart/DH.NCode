@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NewLife.Caching;
 using XCode.Cache;
 using Xunit;

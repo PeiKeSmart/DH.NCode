@@ -189,4 +189,17 @@ public class TenantInterceptor : EntityInterceptor
 
         return true;
     }
+
+    /// <summary>查询时自动附加租户过滤条件，无需在业务代码中手动调用 ApplyTenant</summary>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="where">查询条件表达式</param>
+    /// <param name="action">查询操作来源</param>
+    /// <returns>修改后的查询条件，已合并租户过滤</returns>
+    protected override XCode.Expression? OnQuery(IEntityFactory factory, XCode.Expression? where, QueryAction action)
+    {
+        // 转为 WhereExpression 以便应用租户过滤。where 可能为 null 或普通 Expression，需显式包装
+        var exp = where as WhereExpression ?? new WhereExpression(where, Operator.Space, null);
+
+        return exp.ApplyTenant(factory);
+    }
 }

@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using XCode.Membership;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
-using System.Collections.Generic;
-using XCode.Membership;
 using XCode.Membership;
 using static XCode.Membership.Department;
-
+using XCode.Membership;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>部门。组织机构，多级树状结构，支持多租户</summary>
@@ -58,7 +57,7 @@ public class Department : EntityController<Department>
         var tenantId = p["tenantId"].ToInt(-1);
         var parentId = p["parentId"].ToInt(-1);
         var managerId = p["managerId"].ToInt(-1);
-        var type = (XCode.Membership.DepartmentTypes)p["type"].ToInt(-1);
+        var type = (DepartmentTypes)p["type"].ToInt(-1);
         var visible = p["visible"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 

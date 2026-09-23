@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using XCode.Membership;
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
 using NewLife.Cube.ViewModels;
 using NewLife.Log;
 using NewLife.Web;
-using System.Collections.Generic;
-using XCode.Membership;
 using XCode.Membership;
 using static XCode.Membership.Menu;
-
+using XCode.Membership;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
@@ -56,11 +55,11 @@ public class Menu : EntityController<Menu>
     protected override IEnumerable<Menu> Search(Pager p)
     {
         var parentId = p["parentId"].ToInt(-1);
-        var type = (XCode.Membership.MenuTypes)p["type"].ToInt(-1);
+        var type = (MenuTypes)p["type"].ToInt(-1);
         var visible = p["visible"]?.ToBoolean();
         var necessary = p["necessary"]?.ToBoolean();
         var newWindow = p["newWindow"]?.ToBoolean();
-        var dataScope = (XCode.Membership.DataScopes)p["dataScope"].ToInt(-1);
+        var dataScope = (DataScopes)p["dataScope"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();

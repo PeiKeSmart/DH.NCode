@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
@@ -193,6 +193,24 @@ internal class NovaDbSession : RemoteDbSession
     }
 
     #endregion 基本方法 查询/执行
+
+    #region 高级
+    /// <summary>清空数据表，标识归零。表不存在时静默返回 0，对齐 SQLite 驱动行为</summary>
+    /// <param name="tableName">表名（可能带反引号或表前缀）</param>
+    /// <returns></returns>
+    public override Int32 Truncate(String tableName)
+    {
+        var name = tableName.Trim().Trim('`', '`').Trim();
+
+        // 表不存在时静默返回，避免首次初始化时误报错。_sys.tables 不支持聚合函数，用单列查询判断
+        var db = Database.DatabaseName;
+        var sql = $"select table_name from _sys.tables where table_schema='{db}' and table_name='{name}'";
+        if (ExecuteScalar<String>(sql).IsNullOrEmpty()) return 0;
+
+        return base.Truncate(tableName);
+    }
+
+    #endregion 高级
 
     #region 批量操作
 
@@ -420,13 +438,7 @@ internal class NovaDbMetaData : RemoteDbMetaData
 
     #region 反向工程
 
-    protected override Boolean DatabaseExist(String databaseName)
-    {
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
-
-    public override String CreateDatabaseSQL(String dbname, String? file) => base.CreateDatabaseSQL(dbname, file) + " DEFAULT CHARACTER SET utf8mb4";
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)} DEFAULT CHARACTER SET utf8mb4";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
 

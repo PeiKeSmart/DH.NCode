@@ -2,11 +2,11 @@ name: publish-beta
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
     paths:
         - 'DH.NCode/**'
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
     paths:
         - 'DH.NCode/**'
   workflow_dispatch:

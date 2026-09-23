@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
@@ -431,11 +431,8 @@ internal class HighGoMetaData : RemoteDbMetaData
     #endregion
 
     #region 反向工程
-    protected override Boolean DatabaseExist(String databaseName)
-    {
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
+    /// <summary>创建数据库的SQL语句，包含IF NOT EXISTS确保幂等</summary>
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";
 
     public override String? AddTableDescriptionSQL(IDataTable table)
     {

@@ -13,7 +13,7 @@ XCode 现已支持 InfluxDB 2.x 时序数据库，提供完整的添删改查（
 - ✅ 支持 Organization 和 Bucket 管理
 - ✅ 批量数据写入
 - ✅ 自动处理 CSV 格式查询结果
-- ✅ 兼容 .NET Framework 4.5 到 .NET 10
+- ✅ 兼容 .NET Framework 4.5 到 .NET 11
 
 ## 快速开始
 

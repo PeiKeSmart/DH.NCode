@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
@@ -550,11 +550,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
     #endregion 架构
 
     #region 反向工程
-    protected override Boolean DatabaseExist(String databaseName)
-    {
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
     public override String CreateTableSQL(IDataTable table)
     {

@@ -9,7 +9,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 /// <summary>部门。组织机构，多级树状结构</summary>
-public partial class Department : Entity<Department>, ITenantScope
+public partial class Department : Entity<Department>, ITenantScope, IDepartmentScope, IDataScopeFieldProvider
 {
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
@@ -28,6 +28,7 @@ public partial class Department : Entity<Department>, ITenantScope
         Meta.Interceptors.Add<TimeInterceptor>();
         Meta.Interceptors.Add<IPInterceptor>();
         Meta.Interceptors.Add<TenantInterceptor>();
+        Meta.Interceptors.Add<DataScopeInterceptor>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -35,6 +36,9 @@ public partial class Department : Entity<Department>, ITenantScope
     public override Boolean Valid(DataMethod method)
     {
         if (method == DataMethod.Delete) return true;
+
+        // 清理富文本编辑器遗留的空内容（如 <p><br></p>），避免脏值写入数据库并经 SSO 同步扩散；随本次更新写库清除
+        if (EmptyHtmlHelper.IsEmptyHtml(Remark)) Remark = null;
 
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
@@ -260,15 +264,15 @@ public partial class Department : Entity<Department>, ITenantScope
     #endregion
 
     #region 业务操作
-    /// <summary>根据所属父级Id查找</summary>
-    /// <param name="parentID">所属父级Id</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByParentId(Int32 parentID)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
+    #endregion
 
-        return FindAll(_.ParentID == parentID);
-    }
+    #region IDepartmentScope 成员
+    Int32 IDepartmentScope.DepartmentId { get => ID; set => ID = value; }
+    #endregion
+
+    #region IDataScopeFieldProvider 成员
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => null;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.ID;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetTenantField() => _.TenantId;
     #endregion
 }
