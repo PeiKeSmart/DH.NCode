@@ -217,6 +217,17 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
     }
+
+    /// <summary>根据所属父级Id查找</summary>
+    /// <param name="parentID">所属父级Id</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByParentId(Int32 parentID)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
+
+        return FindAll(_.ParentID == parentID);
+    }
     #endregion
 
     #region 高级查询
